@@ -16,7 +16,6 @@ contextBridge.exposeInMainWorld('projectAPI', {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
   } catch (error) {
     console.error(error)
   }
@@ -50,5 +49,17 @@ contextBridge.exposeInMainWorld('myApp', {
     // メインプロセスの関数を呼び出す
     const result = await ipcRenderer.invoke('saveFile', currentPath, textData)
     return result
-  }
+  },
+
+  /**
+   * フォルダを開くダイアログ
+   */
+  openDialog: () => ipcRenderer.invoke('open-dialog')
 })
+
+contextBridge.exposeInMainWorld('api', {
+  openDialog: async () => {
+    const result = await ipcRenderer.invoke('open-dialog');
+    return result;
+  },
+});
