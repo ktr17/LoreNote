@@ -1,14 +1,23 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Button from './components/Button';
 import Scrap from './components/Scrap';
+import Setting from './components/Setting';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
 import './assets/main.css';
 import { initializeProject } from './utils/fileUtils';
+import { useLocation } from 'react-router-dom';
 
 function App(): JSX.Element {
+  const location = useLocation();
+  const [showSetting, setShowSetting] = useState(location.hash === '#setting');
+
   useEffect(() => {
     initializeProject();
   }, []);
+
+  useEffect(() => {
+    setShowSetting(location.hash === '#setting');
+  }, [location]);
 
   const {
     scraps,
@@ -92,6 +101,7 @@ function App(): JSX.Element {
           ))}
         </div>
       </main>
+      {showSetting && <Setting onClose={() => setShowSetting(false)} />}
     </div>
   );
 }

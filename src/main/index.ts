@@ -1,5 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import * as fs from 'fs'
+import { createMenu } from './menu'
 import * as path from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -82,37 +83,7 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // メニューバーの作成
-  const menu = Menu.buildFromTemplate([
-    {
-      label: 'ファイル',
-      submenu: [
-        { label: '保存', accelerator: 'Cmd+S', click: () => { /* 保存処理 */ } },
-        { type: 'separator' },
-        { label: '終了', accelerator: 'Cmd+Q', click: () => app.quit() }
-      ]
-    },
-    {
-      label: '編集',
-      submenu: [
-        { label: 'コピー', accelerator: 'Cmd+C', click: () => { /* コピー処理 */ } },
-        { label: 'ペースト', accelerator: 'Cmd+V', click: () => { /* ペースト処理 */ } }
-      ]
-    },
-    {
-      label: '設定',
-      click: () => {
-        // 設定ダイアログを開く処理
-        dialog.showSaveDialog({
-          title: '設定',
-          message: '設定ダイアログを開きます',
-        })
-      }
-    }
-  ])
-
-  Menu.setApplicationMenu(menu)
-
+  createMenu()
   createWindow()
 
   app.on('activate', function () {
