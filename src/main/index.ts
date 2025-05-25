@@ -39,6 +39,24 @@ function createWindow(): void {
   }
 }
 
+/**
+ * フォルダ選択ダイアログを開く
+ */
+ipcMain.handle('open-dialog', async() => {
+  // const result = await dialog.showOpenDialog({ properties: ['openFile']});
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: '保存先の選択',
+    defaultPath: '',
+    buttonLabel: '保存',
+    filters: [
+      { name: 'Markdown Files', extensions: ['md'] },
+      { name: 'Text Files', extensions: ['txt'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  });
+
+  return { filePath, canceled };
+})
 
 // フォルダパスの保存
 ipcMain.handle('save-project-path', (event, folderPath) => {
@@ -51,7 +69,7 @@ ipcMain.handle('get-project-path', () => {
 });
 
 
-// 🔹 ファイル保存の IPC 通信
+// ファイル保存の IPC 通信
 ipcMain.handle(
   'save-file',
   async (_event, { filename, content }: { filename: string; content: string }) => {
@@ -79,9 +97,6 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
 
   createMenu()
   createWindow()

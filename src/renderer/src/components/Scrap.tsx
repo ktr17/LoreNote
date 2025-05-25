@@ -14,7 +14,7 @@ interface ScrapProps {
   onDragStart: (index: number) => void;
   onDragOver: (index: number) => void;
   onDragEnd: () => void;
-  onSave: (id: number, content: string, title: string) => void;
+  onSave: (id: number, content: string, title: string, filePath?: string) => void;
 }
 
 export const Scrap = ({
@@ -64,9 +64,13 @@ export const Scrap = ({
   // レンダラープロセスからプリロードプロセスのファイル保存関数を呼び出す
   const handleSave = async (): Promise<void> => {
     try {
-      // ファイル保存処理
-      console.log(content);
-      await onSave(scrap.id, content, title);
+      const result = await window.api.openDialog()
+
+      if (result && result.filePath) {
+        // ファイル保存処理
+        console.log(content);
+        await onSave(scrap.id, content, title, result.filePath);
+      }
     } catch (error) {
       console.error('保存エラー:', error);
     }
