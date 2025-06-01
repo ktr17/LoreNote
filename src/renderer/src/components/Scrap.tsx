@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import MDEditor from './MarkdownEditor';
 import Button from './Button';
 import ScrapModel from '../model/ScrapModel';
@@ -14,10 +14,10 @@ interface ScrapProps {
   onDragStart: (index: number) => void;
   onDragOver: (index: number) => void;
   onDragEnd: () => void;
-  onSave: (id: number, content: string, title: string) => void;
+  onSave: (id: number, content: string, title: string, filePath?: string) => void;
 }
 
-export const Scrap = ({
+const Scrap = ({
   scrap,
   isSelected,
   onContentChange,
@@ -28,92 +28,82 @@ export const Scrap = ({
   onDragStart,
   onDragOver,
   onDragEnd,
-  onSave
+  onSave,
 }: ScrapProps): JSX.Element => {
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
   const scrapRef = useRef<HTMLDivElement>(null);
 
-  // スクラップが更新されたら状態を更新
   useEffect(() => {
     setTitle(scrap.getTitle());
     setContent(scrap.getContent());
   }, [scrap]);
 
-  const handleContentChange = (value: string): void => {
-    setContent(value);
-    onContentChange(scrap.id, value);
+  const extractTitleFromContent = (text: string): string => {
+    const firstLine = text.split('\n')[0].replace(/^#\s*/, '');
+    return firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine;
+  };
 
-    // タイトルが空の場合、コンテンツの最初の行をタイトルとして設定
-    if (!title && value) {
-      const firstLine = value.split('\n')[0].replace(/^#\s*/, '');
-      if (firstLine) {
-        const newTitle = firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
+  const handleContentChange = useCallback(
+    (value: string) => {
+      setContent(value);
+      onContentChange(scrap.id, value);
+
+      if (!title && value) {
+        const newTitle = extractTitleFromContent(value);
         setTitle(newTitle);
         onTitleChange(scrap.id, newTitle);
       }
-    }
-  };
+    },
+    [scrap.id, onContentChange, onTitleChange, title]
+  );
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
     onTitleChange(scrap.id, newTitle);
   };
 
-  // レンダラープロセスからプリロードプロセスのファイル保存関数を呼び出す
-  const handleSave = async (): Promise<void> => {
+  const handleSave = async () => {
     try {
-      // ファイル保存処理
-      console.log(content);
-      await onSave(scrap.id, content, title);
+      const projectPath = await window.projectAPI.getProjectPath();
+      const filePath = projectPath
+        ? `${projectPath}/${title}.md`
+        : (await window.api.openDialog()).filePath;
+
+      if (filePath) {
+        await onSave(scrap.id, content, title, filePath);
+      }
     } catch (error) {
       console.error('保存エラー:', error);
     }
   };
-  const handleDelete = (): void => {
-    onDelete(scrap.id);
-  };
 
-  const handleClick = (): void => {
-    onSelect(scrap.id);
-  };
+  const handleDelete = () => onDelete(scrap.id);
+  const handleClick = () => onSelect(scrap.id);
 
-  const handleDragStart = (e: React.DragEvent): void => {
+  const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => {
-      if (scrapRef.current) {
-        scrapRef.current.classList.add('dragging');
-      }
-    }, 0);
+    setTimeout(() => scrapRef.current?.classList.add('dragging'), 0);
     onDragStart(index);
   };
 
-  const handleDragOver = (e: React.DragEvent): void => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     onDragOver(index);
   };
 
-  const handleDragEnd = (): void => {
-    if (scrapRef.current) {
-      scrapRef.current.classList.remove('dragging');
-    }
+  const handleDragEnd = () => {
+    scrapRef.current?.classList.remove('dragging');
     onDragEnd();
   };
 
-  // フォルダパスを設定する(プロジェクトパス)
-  const selectFolder = async (): Promise<void> => {
+  const selectFolder = async () => {
     const folder = await window.electronAPI.openFolderDialog();
     if (folder) {
       await window.projectAPI.saveProjectPath(folder);
       alert(`プロジェクトパスを保存しました: ${folder}`);
     }
-  };
-
-  // フォルダパスを読み込む(プロジェクトパス)
-  const loadProject = async () => {
-    const savedPath = await window.projectAPI.getProjectPath();
-    alert('前回開いたプロジェクト:', savedPath);
   };
 
   return (
@@ -135,15 +125,9 @@ export const Scrap = ({
           className="scrap-title-input"
         />
         <div className="scrap-actions">
-          <Button onClick={handleSave} variant="primary" size="small">
-            保存
-          </Button>
-          <Button onClick={handleDelete} variant="danger" size="small">
-            削除
-          </Button>
-          <Button onClick={selectFolder} variant="danger" size="small">
-            選択
-          </Button>
+          <Button onClick={handleSave} variant="primary" size="small">保存</Button>
+          <Button onClick={handleDelete} variant="danger" size="small">削除</Button>
+          <Button onClick={selectFolder} variant="secondary" size="small">選択</Button>
         </div>
       </div>
 
