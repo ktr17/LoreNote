@@ -1,65 +1,69 @@
-import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron';
+import { electronAPI } from '@electron-toolkit/preload';
 
-// Custom APIs for renderer
-const api = {}
-
-// electron-store
-contextBridge.exposeInMainWorld('projectAPI', {
-  saveProjectPath: (path) => ipcRenderer.invoke('save-project-path', path),
-  getProjectPath: () => ipcRenderer.invoke('get-project-path'),
-});
-
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
+// Electron公式APIの橋渡し
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('electronAPI', electronAPI);
   } catch (error) {
-    console.error(error)
+    console.error('electronAPIの公開に失敗:', error);
   }
 } else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = api
+  // 型チェック無視して直接代入（非推奨）
+  window.electron = electronAPI;
 }
 
-// preloadファイル
-// レンダラープロセスのグローバル空間(window)にAPIとしての関数を生やします。
-// レンダラープロセスとメインプロセスの橋渡しを行います。
-contextBridge.exposeInMainWorld('myApp', {
+// ファイル操作用API
+const myApp = {
   /**
-   * 【プリロード（中継）】ファイルを開きます。
-   * @returns {Promise<{filePath: string, textData:string}>}
+   * ファイルを開く
    */
-  async openFile() {
-    // メインプロセスの関数を呼び出す
-    const result = await ipcRenderer.invoke('openFile')
-    return result
-  },
-  /**
-   * 【プリロード（中継）】ファイルを保存します。
-   * @param {string} currentPath 現在編集中のファイルのパス
-   * @param {string} textData テキストデータ
-   * @returns {Promise<{filePath: string} | void>}
-   */
-  async saveFile(currentPath, textData) {
-    // メインプロセスの関数を呼び出す
-    const result = await ipcRenderer.invoke('saveFile', currentPath, textData)
-    return result
+  async openFile(): Promise<{ filePath: string; textData: string } | null> {
+    return await ipcRenderer.invoke('openFile');
   },
 
   /**
-   * フォルダを開くダイアログ
+   * ファイルを保存
+   * @param currentPath 保存先のパス
+   * @param textData テキスト内容
    */
-  openDialog: () => ipcRenderer.invoke('open-dialog')
-})
+  async saveFile(currentPath: string, textData: string): Promise<{ filePath: string } | void> {
+    return await ipcRenderer.invoke('saveFile', currentPath, textData);
+  }
+};
 
-contextBridge.exposeInMainWorld('api', {
-  openDialog: async () => {
-    const result = await ipcRenderer.invoke('open-dialog');
-    return result;
+// プロジェクト設定用API
+const projectAPI = {
+  /**
+   * プロジェクトパスを保存
+   */
+  async saveProjectPath(path: string): Promise<boolean> {
+    return await ipcRenderer.invoke('save-project-path', path);
   },
-});
+
+  /**
+   * 保存済みプロジェクトパスを取得
+   */
+  async getProjectPath(): Promise<string | null> {
+    return await ipcRenderer.invoke('get-project-path');
+  }
+};
+
+// ダイアログ関連API
+const customAPI = {
+  /**
+   * 保存用のファイルダイアログを開く
+   */
+  async openDialog(): Promise<{ filePath: string; canceled: boolean }> {
+    return await ipcRenderer.invoke('open-dialog');
+  },
+
+  async openDialogFolder(): Promise<{ folderPath: string; canceld: boolean }> {
+    return await ipcRenderer.invoke('open-dialog-folder');
+  }
+};
+
+// 各APIをレンダラープロセスのグローバル空間に公開
+contextBridge.exposeInMainWorld('myApp', myApp);
+contextBridge.exposeInMainWorld('projectAPI', projectAPI);
+contextBridge.exposeInMainWorld('api', customAPI);

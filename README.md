@@ -65,7 +65,7 @@ volta pin node@22.13.1
     │       ├── assets
     │       └── App.tsx: Renderer Process
     └── preload/
-        └── index.ts: Preload
+        └── preload.ts: Preload Process
 ```
 
 [tree.nathanfriend.com

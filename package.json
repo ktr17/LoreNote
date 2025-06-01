@@ -26,10 +26,12 @@
     "@electron/remote": "^2.1.2",
     "dompurify": "^3.2.4",
     "easymde": "^2.19.0",
+    "electron-is-dev": "^3.0.1",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.3.9",
     "highlight.js": "^11.11.1",
     "marked": "^15.0.7",
+    "react-router-dom": "^7.6.0",
     "react-simplemde-editor": "^5.2.0",
     "uuid": "^11.1.0"
   },
