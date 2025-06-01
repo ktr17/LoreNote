@@ -1,4 +1,5 @@
 import { Menu, MenuItemConstructorOptions, BrowserWindow } from 'electron';
+import * as path from 'path'
 
 let settingWindow: BrowserWindow | null = null;
 const isDev = import.meta.env.MODE === 'development';
@@ -30,8 +31,10 @@ export function createMenu(): void {
                     // parent: BrowserWindow.getFocusedWindow(),
                     show: false,
                     webPreferences: {
+                      preload: path.join(__dirname, '../preload/preload.js'),
                       nodeIntegration: true,
-                      contextIsolation: false,
+                      contextIsolation: true,
+                      sandbox: false
                     },
                   });
                   if (isDev) {
