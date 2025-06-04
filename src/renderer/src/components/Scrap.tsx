@@ -79,6 +79,16 @@ const Scrap = ({
     }
   };
 
+  const handleGetFileList = async () => {
+    const fileList = await window.myApp.getFileList();
+    alert(fileList);
+  }
+  const handleGetAllFilePaths = async () => {
+    const filePaths = await window.myApp.getAllFilePaths();
+    return filePaths
+    alert(filePaths);
+  }
+
   const handleDelete = () => onDelete(scrap.id);
   const handleClick = () => onSelect(scrap.id);
 

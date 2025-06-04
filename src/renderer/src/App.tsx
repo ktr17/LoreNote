@@ -10,14 +10,7 @@ import { useLocation } from 'react-router-dom';
 function App(): JSX.Element {
   const location = useLocation();
   const [showSetting, setShowSetting] = useState(location.hash === '#setting');
-
-  useEffect(() => {
-    initializeProject();
-  }, []);
-
-  useEffect(() => {
-    setShowSetting(location.hash === '#setting');
-  }, [location]);
+  console.log('App component rendered');
 
   const {
     scraps,
@@ -27,8 +20,15 @@ function App(): JSX.Element {
     updateScrapContent,
     updateScrapTitle,
     reorderScraps,
-    deleteScrap
+    deleteScrap,
+    addScrapFromFile,
+    openProjectFiles,
   } = useScrapViewModel();
+
+  useEffect(() => {
+    setShowSetting(location.hash === '#setting');
+  }, [location]);
+
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
