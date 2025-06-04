@@ -119,18 +119,60 @@ ipcMain.handle('save-project-path', async (_event, folderPath) => {
   return true;
 });
 
-ipcMain.handle('get-project-path', async () => {
+/**
+ * プロジェクトパスを取得する
+ */
+async function getProjectPath(): Promise<string | null> {
   await setupStore();
   const store = new Store({
     name: 'setting',
     cwd: path.join(app.getPath('home'), '.lorenote'),
   });
   return store.get('projectPath', null);
+}
+
+/**
+ * プロジェクト配下のファイル一覧を取得する
+ */
+ipcMain.handle('get-file-list', async () => {
+  const projectPath = await getProjectPath();
+  const files = await fs.promises.readdir(projectPath);
+  return files;
+ }
+);
+
+/**
+ * ファイルのパス一覧を取得する
+ */
+ipcMain.handle('get-all-file-paths', async () => {
+  const projectPath = await getProjectPath();
+  const files = await fs.promises.readdir(projectPath);
+  const filePaths: string[] = [];
+  // パスを作成する
+  for(const i in files) {
+    filePaths.push(projectPath + '/' + files[i]);
+  }
+  return filePaths;
+ }
+);
+
+/**
+ * ファイルを読み込む
+ */
+ipcMain.handle('read-file', async (event, filePath: string) => {
+  try {
+    const textData = await fs.promises.readFile(filePath, 'utf-8');
+    return textData;
+  } catch (error) {
+    console.error('ファイル読み込みエラー:', error);
+    return null;
+  }
 });
 
 // ファイル操作 IPC
 ipcMain.handle('openFile', openFile);
 ipcMain.handle('saveFile', saveFile);
+ipcMain.handle('get-project-path', getProjectPath);
 
 // アプリ初期化
 async function main() {

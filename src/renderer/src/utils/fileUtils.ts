@@ -35,6 +35,7 @@ async function selectProjectDirectory(): Promise<string | null> {
   }
 }
 
+
 // Scrapをファイルに保存する関数
 export async function saveScrapToFile(id: number, content: string, title: string): Promise<void> {
   if (!projectDirectory) {

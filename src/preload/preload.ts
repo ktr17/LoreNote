@@ -29,6 +29,24 @@ const myApp = {
    */
   async saveFile(currentPath: string, textData: string): Promise<{ filePath: string } | void> {
     return await ipcRenderer.invoke('saveFile', currentPath, textData);
+  },
+  /**
+   * ファイル一覧取得
+   */
+  async getFileList(): Promise<{ files: string[] } | null> {
+    return await ipcRenderer.invoke('get-file-list');
+  },
+  /**
+   * ファイルのパス一覧を取得する
+   */
+  async getAllFilePaths(): Promise<{ filePaths: string[] } | null> {
+    return await ipcRenderer.invoke('get-all-file-paths')
+  },
+  /**
+   * ファイルを読み込む
+   */
+  async readFile(filePath: string): Promise<{ filePath: string; textData: string} | null> {
+    return await ipcRenderer.invoke('read-file', filePath);
   }
 };
 
@@ -43,9 +61,16 @@ const projectAPI = {
 
   /**
    * 保存済みプロジェクトパスを取得
-   */
+    */
   async getProjectPath(): Promise<string | null> {
     return await ipcRenderer.invoke('get-project-path');
+  },
+
+  /**
+   * プロジェクトパスのMarkdownファイルを読み込む
+   */
+  async loadMarkdownFiles(projectPath: string): Promise<string[]> {
+    return await ipcRenderer.invoke('load-markdown-files', projectPath);
   }
 };
 
