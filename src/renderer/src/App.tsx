@@ -64,12 +64,14 @@ function App(): JSX.Element {
   }, []);
 
   // ドラッグ中の処理
-  const handleDragOver = useCallback((index: number): void => {
-      if (draggedIndex !== null && draggedIndex !== index) {
-        // ドラッグ中のアイテムを新しい位置に移動
-        reorderScraps(draggedIndex, index)
-        setDraggedIndex(index)
+  const handleDragOver = useCallback((hoverIndex: number): void => {
+      if (draggedIndex === null || draggedIndex === hoverIndex) {
+        return
       }
+      // 同一スクラップの上にいる時間が長いと reorder が無駄に起きてしまう
+      // → dragover は頻繁に発火するため、一度 reorder した後は index が変わるまで無視
+      reorderScraps(draggedIndex, hoverIndex)
+      setDraggedIndex(hoverIndex)
     },
     [draggedIndex, reorderScraps]
   )
@@ -77,7 +79,17 @@ function App(): JSX.Element {
   // ドラッグ終了時の処理
   const handleDragEnd = useCallback((): void => {
     setDraggedIndex(null);
-  }, []);
+
+    // `scraps` は reorderScraps の useCallback で更新済みのはず
+    // UUID と order の一覧を main プロセスに送信
+    const updatedScraps = scraps.map(scrap => ({
+      id: scrap.id,
+      type: scrap.type,
+      title: scrap.title,
+      order: scrap.order
+    }));
+    window.myApp.updateScrapOrder(updatedScraps);
+  }, [scraps]);
 
   return (
     <div className="app-container">
