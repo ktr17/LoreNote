@@ -57,7 +57,7 @@ const projectAPI = {
 
   /**
    * 保存済みプロジェクトパスを取得
-   */
+    */
   async getProjectPath(): Promise<string | null> {
     return await ipcRenderer.invoke('get-project-path');
   },

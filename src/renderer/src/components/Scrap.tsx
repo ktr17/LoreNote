@@ -92,6 +92,7 @@ const Scrap = ({
   const handleDelete = (): void => onDelete(scrap.id); // Added return type
   const handleClick = (): void => onSelect(scrap.id); // Added return type
 
+
   const handleDragStart = (e: React.DragEvent): void => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());

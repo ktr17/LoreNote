@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import ScrapModel from '../model/ScrapModel';
 import { generateScrap } from '../utils/ScrapUtils';
@@ -15,6 +16,8 @@ export const useScrapViewModel = (): {
   reorderScraps: (sourceIndex: number, destinationIndex: number) => void;
   deleteScrap: (id: number) => void;
   getSelectedScrap: () => ScrapModel | null;
+  addScrapFromFile: (filePaths: string[]) => Promise<void | null>;
+  openProjectFiles: () => Promise<void>;
 } => {
   const [scraps, setScraps] = useState<ScrapModel[]>([]);
   const [selectedScrapId, setSelectedScrapId] = useState<number>(0);
@@ -80,10 +83,11 @@ export const useScrapViewModel = (): {
 
   /**
    * メモ内容の更新
+
    */
   const updateScrapContent = useCallback((id: number, newContent: string) => {
-    setScraps(prevScraps =>
-      prevScraps.map(scrap =>
+    setScraps(prev =>
+      prev.map(scrap =>
         scrap.id === id
           ? new ScrapModel({
               content: newContent,
@@ -175,6 +179,7 @@ export const useScrapViewModel = (): {
         id: scrap.id,
         type: scrap.type
       }));
+
     });
   }, [selectedScrapId]);
 
@@ -192,6 +197,71 @@ export const useScrapViewModel = (): {
     return [...scraps].sort((a, b) => a.getOrder() - b.getOrder());
   }, [scraps]);
 
+  /**
+   * コンテンツからh1タグのタイトルを抽出
+   * @param content テキスト内容
+   * @returns タイトル文字列 | null
+   */
+  const extractTitleFromContent = (content: string): string | null => {
+    const match = content.match(/^#\s*(.+)$/m);
+    return match ? match[1].trim() : null;
+  };
+
+  /**
+   * 指定ファイル群からスクラップを作成・追加
+   * @param filePaths ファイルパスの配列
+   */
+  const addScrapFromFile = useCallback(async (filePaths: string[]) => {
+    try {
+      const newScraps = await Promise.all(filePaths.map(async (filePath) => {
+        const content = await window.myApp.readFile(filePath);
+        const title = extractTitleFromContent(content) || '読み込みメモ';
+        return { content, title };
+      }));
+
+      setScraps(prev => {
+        const maxId = prev.length > 0 ? Math.max(...prev.map(s => s.id)) : 0;
+        const updatedScraps = [...prev];
+
+        newScraps.forEach((scrapData, index) => {
+          const newId = maxId + index + 1;
+          const newOrder = updatedScraps.length;
+          updatedScraps.push(new ScrapModel(
+            newId,
+            scrapData.content,
+            scrapData.title + ' ' + newId,
+            newOrder
+          ));
+          setSelectedScrapId(newId);
+        });
+
+        return updatedScraps;
+      });
+    } catch (error) {
+      console.error('ファイル読み込みに失敗:', error);
+      alert('ファイルの読み込みに失敗しました');
+      return null;
+    }
+  }, []);
+
+  /**
+   * プロジェクト内の全ファイルパスを取得
+   * @returns ファイルパス配列
+   */
+  const getAllFilePaths = useCallback(async () => {
+    const filePaths = await window.myApp.getAllFilePaths();
+    return filePaths;
+  }, []);
+
+  /**
+   * プロジェクトファイルを読み込みスクラップとして追加
+   */
+  const openProjectFiles = useCallback(async () => {
+    console.log('📁 openProjectFiles running');
+    const filePaths = await getAllFilePaths();
+    await addScrapFromFile(filePaths);
+  }, [getAllFilePaths, addScrapFromFile]);
+
   return {
     scraps: getAllScraps(),
     selectedScrapId,
@@ -201,7 +271,9 @@ export const useScrapViewModel = (): {
     updateScrapTitle,
     reorderScraps,
     deleteScrap,
-    getSelectedScrap
+    getSelectedScrap,
+    addScrapFromFile,
+    openProjectFiles
   };
 };
 
