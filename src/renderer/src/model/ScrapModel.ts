@@ -1,6 +1,8 @@
+import { v4 as uuidv4 } from 'uuid'
+
 class ScrapModel {
-  // markdownファイルを識別するためのID
-  id: number
+  // markdownファイルを識別するためのUUID
+  id: string
   // markdownの文章
   content: string
   // スクラップのタイトル
@@ -8,13 +10,12 @@ class ScrapModel {
   // スクラップの表示順序
   order: number
 
-  constructor(id: number, content: string, title: string = '', order: number = 0) {
+  constructor({ id = uuidv4(), content = '', title = '', order = 0 }: Partial<ScrapModel> = {}) {
     this.id = id
     this.content = content
     this.title = title
     this.order = order
   }
-
   /**
    * Markdownのテキストを取得する
    */

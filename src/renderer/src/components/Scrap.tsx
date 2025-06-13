@@ -33,6 +33,9 @@ const Scrap = ({
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
   const scrapRef = useRef<HTMLDivElement>(null);
+  const [initialX, setInitialX] = useState(0);
+  const [initialY, setInitialY] = useState(0);
+  // const [isDragging, setIsDragging] = useState(false); // Removed unused variable
 
   useEffect(() => {
     setTitle(scrap.getTitle());
@@ -45,7 +48,7 @@ const Scrap = ({
   };
 
   const handleContentChange = useCallback(
-    (value: string) => {
+    (value: string): void => { // Added return type
       setContent(value);
       onContentChange(scrap.id, value);
 
@@ -58,13 +61,20 @@ const Scrap = ({
     [scrap.id, onContentChange, onTitleChange, title]
   );
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    onTitleChange(scrap.id, newTitle);
+    onTitleChange(scrap.id, newTitle); // UI 側への通知
+
+    try {
+      await window.projectAPI.updateScrapTitle(scrap.id, newTitle); // electron-store 側を更新
+    } catch (error) {
+      console.error('タイトル更新エラー:', error);
+    }
   };
 
-  const handleSave = async () => {
+
+  const handleSave = async (): Promise<void> => { // Added return type
     try {
       const projectPath = await window.projectAPI.getProjectPath();
       const filePath = projectPath
@@ -79,36 +89,28 @@ const Scrap = ({
     }
   };
 
-  const handleGetFileList = async () => {
-    const fileList = await window.myApp.getFileList();
-    alert(fileList);
-  }
-  const handleGetAllFilePaths = async () => {
-    const filePaths = await window.myApp.getAllFilePaths();
-    return filePaths
-    alert(filePaths);
-  }
+  const handleDelete = (): void => onDelete(scrap.id); // Added return type
+  const handleClick = (): void => onSelect(scrap.id); // Added return type
 
-  const handleDelete = () => onDelete(scrap.id);
-  const handleClick = () => onSelect(scrap.id);
 
-  const handleDragStart = (e: React.DragEvent) => {
+  const handleDragStart = (e: React.DragEvent): void => {
     e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => scrapRef.current?.classList.add('dragging'), 0);
-    onDragStart(index);
+    e.dataTransfer.setData('text/plain', index.toString());
+    scrapRef.current?.classList.add('dragging');
+    onDragStart(index); // 親にドラッグ元のインデックスを通知
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent): void => { // Added return type
     e.preventDefault();
     onDragOver(index);
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (): void => {
     scrapRef.current?.classList.remove('dragging');
-    onDragEnd();
+    onDragEnd(); // ドラッグ終了を親に通知（並び順変更など）
   };
 
-  const selectFolder = async () => {
+  const selectFolder = async (): Promise<void> => { // Added return type
     const folder = await window.electronAPI.openFolderDialog();
     if (folder) {
       await window.projectAPI.saveProjectPath(folder);
