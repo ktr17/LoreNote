@@ -1,5 +1,5 @@
 import { Scrap } from './../renderer/src/model/Scrap';
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, ipcMain } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 
 // Electron公式APIの橋渡し
@@ -54,7 +54,18 @@ const projectAPI = {
   async saveProjectPath(path: string): Promise<boolean> {
     return await ipcRenderer.invoke('save-project-path', path);
   },
-
+  /**
+   * 設定画面上で設定したファイルの保存間隔を保存
+   */
+  async saveIntervalTime(intervalTime: string): Promise<boolean> {
+    return await ipcRenderer.invoke('save-interval-time', intervalTime);
+  },
+  /**
+   * ファイルの保存間隔を取得
+   */
+  async getIntervalTime(): Promise<Number | null> {
+    return await ipcRenderer.invoke('get-interval-time');
+  },
   /**
    * 保存済みプロジェクトパスを取得
     */

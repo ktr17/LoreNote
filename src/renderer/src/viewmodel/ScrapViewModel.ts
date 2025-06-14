@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import ScrapModel from '../model/ScrapModel';
 import { generateScrap } from '../utils/ScrapUtils';
 
@@ -21,6 +21,7 @@ export const useScrapViewModel = (): {
 } => {
   const [scraps, setScraps] = useState<ScrapModel[]>([]);
   const [selectedScrapId, setSelectedScrapId] = useState<number>(0);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * 初期化処理：scraps.json + mdファイル読み込み
@@ -83,9 +84,15 @@ export const useScrapViewModel = (): {
 
   /**
    * メモ内容の更新
-
    */
-  const updateScrapContent = useCallback((id: number, newContent: string) => {
+  /**
+   * メモ内容の更新
+   */
+  const updateScrapContent = useCallback(async (id: number, newContent: string) => {
+    // 更新対象 scrap をこの時点で取得（クロージャから分離）
+    const scrapToSave = scraps.find(scrap => scrap.id === id);
+    if (!scrapToSave) return;
+
     setScraps(prev =>
       prev.map(scrap =>
         scrap.id === id
@@ -99,7 +106,26 @@ export const useScrapViewModel = (): {
           : scrap
       )
     );
-  }, []);
+
+    // タイマーがすでにあればキャンセル
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // 指定秒後に自動保存
+    const timeInterval = await window.projectAPI.getIntervalTime();
+    console.log(timeInterval);
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      // 内容を md ファイルとして保存
+      window.projectAPI.getProjectPath().then(projectPath => {
+        const filePath = `${projectPath}/${scrapToSave.getTitle()}.md`;
+        const result = window.myApp.saveFile(filePath, newContent);
+      });
+      // scraps.json 更新（ファイル名変わらなければ不要かも）
+      const scrapData = generateScrap(id, scrapToSave.getTitle(), scrapToSave.type, scrapToSave.getOrder());
+      window.projectAPI.saveScrapJson(scrapData);
+    }, timeInterval);
+  }, [scraps]);
 
   /**
    * メモタイトルの更新
