@@ -7,6 +7,20 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 
 let Store: any;
+let settingStore;
+
+async function getSettingStore() {
+  if (!settingStore) {
+    await setupStore();
+    const StoreModule = await import('electron-store');
+    const Store = StoreModule.default;
+    settingStore = new Store({
+      name: 'setting',
+      cwd: path.join(app.getPath('home'), '.lorenote'),
+    });
+  }
+  return settingStore;
+}
 
 // ウィンドウを作成
 function createWindow(): void {
@@ -134,12 +148,8 @@ ipcMain.handle('open-dialog-folder', async () => {
 
 // 設定値の保存・読み出し用 IPC
 ipcMain.handle('save-project-path', async (_event, folderPath) => {
-  await setupStore();
-  const store = new Store({
-    name: 'setting',
-    cwd: path.join(app.getPath('home'), '.lorenote'),
-  });
-  store.set('projectPath', folderPath);
+  const settingStore = await getSettingStore();
+  settingStore.set('projectPath', folderPath);
   return true;
 });
 
@@ -147,13 +157,29 @@ ipcMain.handle('save-project-path', async (_event, folderPath) => {
  * プロジェクトパスを取得する
  */
 async function getProjectPath(): Promise<string | null> {
-  await setupStore();
-  const store = new Store({
-    name: 'setting',
-    cwd: path.join(app.getPath('home'), '.lorenote'),
-  });
-  return store.get('projectPath', null);
-}
+  const settingStore = await getSettingStore();
+  return settingStore.get('projectPath', null);
+};
+
+/**
+ * ファイルの保存間隔を保存する
+ */
+ipcMain.handle('save-interval-time', async (_event, intervalTime) => {
+  const settingStore = await getSettingStore();
+  settingStore.set('saveIntervalTime', intervalTime)
+  return true;
+});
+
+/**
+ * ファイルの保存間隔を取得する
+ */
+ipcMain.handle('get-interval-time', async () => {
+  const settingStore = await getSettingStore();
+
+  const intervalTime = settingStore.get('saveIntervalTime', null);
+  return intervalTime !== null ? Number(intervalTime) : null;
+});
+
 
 /**
  * プロジェクト配下のファイル一覧を取得する
@@ -197,12 +223,8 @@ ipcMain.handle('read-file', async (event, filePath: string) => {
  * メモの情報を管理用JSON(scraps.json)に保存する
  */
 ipcMain.handle('save-scrap-json', async (_event, data) => {
-  await setupStore();
-
-  const settingStore = new Store({
-    name: 'setting',
-    cwd: path.join(app.getPath('home'), '.lorenote'),
-  });
+  // await setupStore();
+  const settingStore = await getSettingStore();
   const projectPath = await settingStore.get('projectPath', null);
 
   const scrapsStore = new Store({
@@ -233,12 +255,8 @@ ipcMain.handle('save-scrap-json', async (_event, data) => {
 
 // 既存の ipcMain.handle('update-scrap-order', ...) を差し替え
 ipcMain.handle('update-scrap-order', async (_event, scraps: any[]) => {
-  await setupStore();
-
-  const settingStore = new Store({
-    name: 'setting',
-    cwd: path.join(app.getPath('home'), '.lorenote'),
-  });
+  // await setupStore();
+  const settingStore = await getSettingStore();
   const projectPath = await settingStore.get('projectPath', null);
 
   const scrapsStore = new Store({
@@ -272,10 +290,7 @@ ipcMain.handle('update-scrap-order', async (_event, scraps: any[]) => {
  */
 ipcMain.handle('update-scrap-title', async (_event, id: string, newTitle: string) => {
   await setupStore();
-  const settingStore = new Store({
-    name: 'setting',
-    cwd: path.join(app.getPath('home'), '.lorenote'),
-  });
+  const settingStore = await getSettingStore();
   const projectPath = await settingStore.get('projectPath', null);
 
   const scrapsStore = new Store({
@@ -298,11 +313,8 @@ ipcMain.handle('update-scrap-title', async (_event, id: string, newTitle: string
  * scraps.jsonから各要素のデータを取得する
  */
 ipcMain.handle('load-scraps-from-json', async () => {
-  await setupStore();
-  const settingStore = new Store({
-    name: 'setting',
-    cwd: path.join(app.getPath('home'), '.lorenote'),
-  });
+  // await setupStore();
+  const settingStore = await getSettingStore();
   const projectPath = await settingStore.get('projectPath', null);
 
   const scrapsStore = new Store({
