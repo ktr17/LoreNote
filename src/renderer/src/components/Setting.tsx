@@ -10,14 +10,14 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
 
   useEffect(() => {
     const loadProjectPath = async (): Promise<void> => {
-      const path = await window.projectAPI.getProjectPath();
+      const path = await window.api.project.getPath();
       if (path) {
         setProjectPath(path);
       }
     };
     const loadIntervalTime = async (): Promise<void> => {
       try {
-        const intervalTime = await window.projectAPI.getIntervalTime();
+        const intervalTime = await window.api.project.getInterval();
         console.log('取得した intervalTime:', intervalTime);
         setSaveInterval(Number(intervalTime));
       } catch (error) {
@@ -30,9 +30,8 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
 
 
   const handleApply = async (): Promise<void> => {
-    const resultSavePath: any = await window.projectAPI.saveProjectPath(projectPath);
-    const resultSaveInterval: any = await window.projectAPI.saveIntervalTime(saveInterval);
-    alert(resultSaveInterval);
+    const resultSavePath: any = await window.api.project.savePath(projectPath);
+    const resultSaveInterval: any = await window.api.project.saveInterval(saveInterval);
     if (resultSavePath || resultSaveInterval) {
       // ファイル保存処理
       alert('保存しました。');
@@ -44,7 +43,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
   };
 
   const handleFolderSelect = async (): Promise<void> => {
-    const folder: any = await window.api.openDialogFolder();
+    const folder: any = await window.api.dialog.openFolder();
     if (!folder.canceled && folder.folderPath) {
       setProjectPath(folder.folderPath);
     }

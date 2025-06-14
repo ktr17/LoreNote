@@ -67,7 +67,7 @@ const Scrap = ({
     onTitleChange(scrap.id, newTitle); // UI 側への通知
 
     try {
-      await window.projectAPI.updateScrapTitle(scrap.id, newTitle); // electron-store 側を更新
+      await window.api.scrap.updateTitle(scrap.id, newTitle); // electron-store 側を更新
     } catch (error) {
       console.error('タイトル更新エラー:', error);
     }
@@ -76,10 +76,10 @@ const Scrap = ({
 
   const handleSave = async (): Promise<void> => { // Added return type
     try {
-      const projectPath = await window.projectAPI.getProjectPath();
+      const projectPath = await window.api.project.getPath();
       const filePath = projectPath
         ? `${projectPath}/${title}.md`
-        : (await window.api.openDialog()).filePath;
+        : (await window.api.dialog.openFile()).filePath;
 
       if (filePath) {
         await onSave(scrap.id, content, title, filePath);
@@ -113,7 +113,7 @@ const Scrap = ({
   const selectFolder = async (): Promise<void> => { // Added return type
     const folder = await window.electronAPI.openFolderDialog();
     if (folder) {
-      await window.projectAPI.saveProjectPath(folder);
+      await window.api.project.savePath(folder);
       alert(`プロジェクトパスを保存しました: ${folder}`);
     }
   };
