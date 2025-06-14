@@ -231,16 +231,6 @@ ipcMain.handle('save-scrap-json', async (_event, data) => {
   return true;
 });
 
-/**
- * ファイルを開く
- */
-ipcMain.handle('read-file', async(_event, filePath) => {
-  console.log(filePath);
-  const textData = fs.readFileSync(filePath, 'utf8');
-  return textData;
-});
-
-
 // 既存の ipcMain.handle('update-scrap-order', ...) を差し替え
 ipcMain.handle('update-scrap-order', async (_event, scraps: any[]) => {
   await setupStore();
