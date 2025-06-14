@@ -29,6 +29,7 @@
     "electron-is-dev": "^3.0.1",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.3.9",
+    "fs": "^0.0.1-security",
     "highlight.js": "^11.11.1",
     "marked": "^15.0.7",
     "react-router-dom": "^7.6.0",
