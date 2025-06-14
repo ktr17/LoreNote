@@ -325,8 +325,8 @@ ipcMain.handle('load-scraps-from-json', async () => {
 })
 
 // ファイル操作 IPC
-ipcMain.handle('openFile', openFile);
-ipcMain.handle('saveFile', saveFile);
+ipcMain.handle('open-file', openFile);
+ipcMain.handle('save-file', saveFile);
 ipcMain.handle('get-project-path', getProjectPath);
 
 // アプリ初期化

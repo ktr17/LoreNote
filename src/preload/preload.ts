@@ -1,113 +1,143 @@
 import { Scrap } from './../renderer/src/model/Scrap';
-import { contextBridge, ipcRenderer, ipcMain } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 
-// Electron公式APIの橋渡し
+// --- Electron公式APIの安全な公開 ---
 if (process.contextIsolated) {
   try {
+    // セキュリティ保護された環境で、Electron公式API（electronAPI）をグローバル公開
     contextBridge.exposeInMainWorld('electronAPI', electronAPI);
   } catch (error) {
     console.error('electronAPIの公開に失敗:', error);
   }
 } else {
-  // 型チェック無視して直接代入（非推奨）
+  // セキュリティ制約がない場合は、非推奨ながら直接代入（開発用の暫定処理）
   window.electron = electronAPI;
 }
 
-// ファイル操作用API
-const myApp = {
-  /**
-   * ファイルを開く
-   */
-  async openFile(): Promise<{ filePath: string; textData: string } | null> {
-    return await ipcRenderer.invoke('openFile');
+// --- レンダラー向けAPIの定義と公開 ---
+const api = {
+  file: {
+    /**
+     * ファイル選択ダイアログを開き、選択されたファイルの内容を返します。
+     * @returns 選択されたファイルのパスと内容。キャンセル時は null。
+     */
+    async open(): Promise<{ filePath: string; textData: string } | null> {
+      return await ipcRenderer.invoke('open-file');
+    },
+
+    /**
+     * 指定したパスにテキストデータを保存します。
+     * @param currentPath 保存するファイルの絶対パス
+     * @param textData 保存する文字列データ
+     * @returns 保存先のファイルパス、または何も返さない（上書き時など）
+     */
+    async save(currentPath: string, textData: string): Promise<{ filePath: string } | void> {
+      return await ipcRenderer.invoke('save-file', currentPath, textData);
+    },
+
+    /**
+     * 指定したファイルパスからメモの内容を読み取ります。
+     * @param filePath 読み込む対象のファイルパス（絶対パス）
+     * @returns ファイル内の文字列データ
+     */
+    async read(filePath: string): Promise<string> {
+      return await ipcRenderer.invoke('read-file', filePath);
+    },
   },
 
-  /**
-   * ファイルを保存
-   * @param currentPath 保存先のパス
-   * @param textData テキスト内容
-   */
-  async saveFile(currentPath: string, textData: string): Promise<{ filePath: string } | void> {
-    return await ipcRenderer.invoke('saveFile', currentPath, textData);
+  scrap: {
+    /**
+     * メモ（Scrap）の表示順を保存します。
+     * @param scraps 並び順を反映したScrapの配列
+     * @returns 保存が成功すればtrue、失敗すればfalse
+     */
+    async updateOrder(scraps: any[]): Promise<boolean> {
+      return await ipcRenderer.invoke('update-scrap-order', scraps);
+    },
+
+    /**
+     * 指定されたScrapのタイトルを更新します。
+     * @param id 更新対象のScrapのID
+     * @param newTitle 新しいタイトル
+     * @returns 更新成功時はtrue
+     */
+    async updateTitle(id: string, newTitle: string): Promise<boolean> {
+      return await ipcRenderer.invoke('update-scrap-title', id, newTitle);
+    },
+
+    /**
+     * Scrapの状態をJSON形式で保存します。
+     * @param data Scrapデータ（順序などを含む）
+     * @returns 保存の成否をbooleanで返す
+     */
+    async saveJson(data: Scrap): Promise<boolean> {
+      return await ipcRenderer.invoke('save-scrap-json', data);
+    },
+
+    /**
+     * 保存されたJSONファイルからScrapデータを読み込みます。
+     * @returns 読み込まれたScrapオブジェクトの配列
+     */
+    async loadJson(): Promise<Scrap[]> {
+      return await ipcRenderer.invoke('load-scraps-from-json');
+    }
   },
-  /**
-   * メモの並び順を保存
-   */
-  async updateScrapOrder(scraps: any[]): Promise<boolean> {
-    return await ipcRenderer.invoke('update-scrap-order', scraps);
+
+  project: {
+    /**
+     * プロジェクトフォルダのパスを保存します。
+     * @param path 選択されたプロジェクトディレクトリのパス
+     * @returns 保存の成否（boolean）
+     */
+    async savePath(path: string): Promise<boolean> {
+      return await ipcRenderer.invoke('save-project-path', path);
+    },
+
+    /**
+     * ファイルの自動保存間隔を設定します。
+     * @param intervalTime 保存間隔（秒を想定）
+     * @returns 設定成功時はtrue
+     */
+    async saveInterval(intervalTime: string): Promise<boolean> {
+      return await ipcRenderer.invoke('save-interval-time', intervalTime);
+    },
+
+    /**
+     * 現在設定されているファイルの保存間隔を取得します。
+     * @returns 保存間隔（秒）。未設定時はnull。
+     */
+    async getInterval(): Promise<number | null> {
+      return await ipcRenderer.invoke('get-interval-time');
+    },
+
+    /**
+     * 保存済みのプロジェクトパスを取得します。
+     * @returns プロジェクトのルートパス。存在しない場合はnull。
+     */
+    async getPath(): Promise<string | null> {
+      return await ipcRenderer.invoke('get-project-path');
+    }
   },
-  /**
-   * メモの内容を取得
-   */
-  async readFile(filePath: string): Promiese<string> {
-    // フルパスで指定する必要がある
-    return await ipcRenderer.invoke('read-file', filePath);
+
+  dialog: {
+    /**
+     * ファイル保存用のダイアログを開き、ユーザーが指定したパスを取得します。
+     * @returns ユーザーが選択したパスと、キャンセルされたかどうかのフラグ
+     */
+    async openFile(): Promise<{ filePath: string; canceled: boolean }> {
+      return await ipcRenderer.invoke('open-dialog');
+    },
+
+    /**
+     * フォルダ選択ダイアログを開きます。
+     * @returns ユーザーが選択したフォルダのパスとキャンセル状態
+     */
+    async openFolder(): Promise<{ folderPath: string; canceld: boolean }> {
+      return await ipcRenderer.invoke('open-dialog-folder');
+    }
   }
 };
 
-// プロジェクト設定用API
-const projectAPI = {
-  /**
-   * プロジェクトパスを保存
-   */
-  async saveProjectPath(path: string): Promise<boolean> {
-    return await ipcRenderer.invoke('save-project-path', path);
-  },
-  /**
-   * 設定画面上で設定したファイルの保存間隔を保存
-   */
-  async saveIntervalTime(intervalTime: string): Promise<boolean> {
-    return await ipcRenderer.invoke('save-interval-time', intervalTime);
-  },
-  /**
-   * ファイルの保存間隔を取得
-   */
-  async getIntervalTime(): Promise<Number | null> {
-    return await ipcRenderer.invoke('get-interval-time');
-  },
-  /**
-   * 保存済みプロジェクトパスを取得
-    */
-  async getProjectPath(): Promise<string | null> {
-    return await ipcRenderer.invoke('get-project-path');
-  },
-  /**
-   * メモの並び順等のデータを格納する
-   */
-  async saveScrapJson(data: Scrap): Promise<boolean> {
-    return await ipcRenderer.invoke('save-scrap-json', data);
-  },
-  /**
-   * タイトルの更新
-   */
-  async updateScrapTitle(id: string, newTitle: string): Promise<boolean> {
-    return await ipcRenderer.invoke('update-scrap-title', id, newTitle);
-  },
-
-  /**
-   * Scrapの読み込み
-   */
-  async loadScrapsFromJson(): Promise<Scrap[]> {
-    return await ipcRenderer.invoke('load-scraps-from-json')
-  }
-};
-
-// ダイアログ関連API
-const customAPI = {
-  /**
-   * 保存用のファイルダイアログを開く
-   */
-  async openDialog(): Promise<{ filePath: string; canceled: boolean }> {
-    return await ipcRenderer.invoke('open-dialog');
-  },
-
-  async openDialogFolder(): Promise<{ folderPath: string; canceld: boolean }> {
-    return await ipcRenderer.invoke('open-dialog-folder');
-  }
-};
-
-// 各APIをレンダラープロセスのグローバル空間に公開
-contextBridge.exposeInMainWorld('myApp', myApp);
-contextBridge.exposeInMainWorld('projectAPI', projectAPI);
-contextBridge.exposeInMainWorld('api', customAPI);
+// グローバルな `api` 名前空間として、各種機能をレンダラープロセスに公開
+contextBridge.exposeInMainWorld('api', api);

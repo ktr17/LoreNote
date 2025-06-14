@@ -29,13 +29,13 @@ export const useScrapViewModel = (): {
   useEffect(() => {
     const loadScraps = async () => {
       try {
-        const jsonScraps = await window.projectAPI.loadScrapsFromJson();
+        const jsonScraps = await window.api.scrap.loadFromJson();
 
         const loadedScraps = await Promise.all(
           jsonScraps.map(async (item: any) => {
             const fileName = `${item.title}.md`;
-            const filePath = await window.projectAPI.getProjectPath();
-            const content = await window.myApp.readFile(filePath + '/' + fileName);
+            const filePath = await window.api.project.getPath();
+            const content = await window.api.file.read(filePath + '/' + fileName);
             const title = item.title;
 
             return new ScrapModel({
@@ -77,7 +77,7 @@ export const useScrapViewModel = (): {
     setSelectedScrapId(newScrap.id);
 
     const scrapData = generateScrap(newScrap.id, newScrap.title, 'file', newOrder);
-    window.projectAPI.saveScrapJson(scrapData);
+    window.api.scrap.saveJson(scrapData);
 
     return newScrap.id;
   }, [scraps]);
@@ -113,17 +113,17 @@ export const useScrapViewModel = (): {
     }
 
     // 指定秒後に自動保存
-    const timeInterval = await window.projectAPI.getIntervalTime();
+    const timeInterval = await window.api.project.getInterval();
     console.log(timeInterval);
     autoSaveTimeoutRef.current = setTimeout(() => {
       // 内容を md ファイルとして保存
-      window.projectAPI.getProjectPath().then(projectPath => {
+      window.api.project.getPath().then(projectPath => {
         const filePath = `${projectPath}/${scrapToSave.getTitle()}.md`;
-        const result = window.myApp.saveFile(filePath, newContent);
+        const result = window.api.file.save(filePath, newContent);
       });
       // scraps.json 更新（ファイル名変わらなければ不要かも）
       const scrapData = generateScrap(id, scrapToSave.getTitle(), scrapToSave.type, scrapToSave.getOrder());
-      window.projectAPI.saveScrapJson(scrapData);
+      window.api.scrap.saveJson(scrapData);
     }, timeInterval);
   }, [scraps]);
 
@@ -144,7 +144,7 @@ export const useScrapViewModel = (): {
 
           const scrapData = generateScrap(scrap.id, scrap.file, scrap.type, scrap.getOrder());
           scrapData.title = newTitle;
-          window.projectAPI.saveScrapJson(scrapData);
+          window.api.scrap.saveJson(scrapData);
 
           return updatedScrap;
         }
@@ -240,7 +240,7 @@ export const useScrapViewModel = (): {
   const addScrapFromFile = useCallback(async (filePaths: string[]) => {
     try {
       const newScraps = await Promise.all(filePaths.map(async (filePath) => {
-        const content = await window.myApp.readFile(filePath);
+        const content = await window.api.file.read(filePath);
         const title = extractTitleFromContent(content) || '読み込みメモ';
         return { content, title };
       }));
