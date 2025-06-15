@@ -34,12 +34,9 @@ const Scrap = ({
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
   const scrapRef = useRef<HTMLDivElement>(null);
-  const [initialX, setInitialX] = useState(0);
-  const [initialY, setInitialY] = useState(0);
 
   useEffect(() => {
     setTitle(scrap.getTitle());
-    setContent(scrap.getContent());
   }, [scrap]);
 
   const extractTitleFromContent = (text: string): string => {
@@ -87,12 +84,11 @@ const Scrap = ({
   const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    // デバウンス関数を呼び出し
-    updateTitle(scrap.id, newTitle);
+    onTitleChange(scrap.id, newTitle);
   };
 
-
-  const handleSave = async (): Promise<void> => { // Added return type
+  const handleSave = async (): Promise<void> => {
+    // Added return type
     try {
       const projectPath = await window.api.project.getPath();
       const filePath = projectPath
@@ -150,13 +146,19 @@ const Scrap = ({
         <input
           type="text"
           value={title}
-          onChange={handleTitleChange}
+          onChange={(e) => {
+            handleTitleChange(e);
+          }}
           placeholder="タイトルを入力"
           className="scrap-title-input"
         />
         <div className="scrap-actions">
-          <Button onClick={handleSave} variant="primary" size="small">保存</Button>
-          <Button onClick={handleDelete} variant="danger" size="small">削除</Button>
+          <Button onClick={handleSave} variant="primary" size="small">
+            保存
+          </Button>
+          <Button onClick={handleDelete} variant="danger" size="small">
+            削除
+          </Button>
         </div>
       </div>
       <div className="scrap-editor">

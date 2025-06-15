@@ -1,5 +1,5 @@
-
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import debounce from 'lodash.debounce';
 import ScrapModel from '../model/ScrapModel';
 import { generateScrap } from '../utils/ScrapUtils';
 
@@ -77,6 +77,12 @@ export const useScrapViewModel = (): {
     setSelectedScrapId(newScrap.id);
 
     const scrapData = generateScrap(newScrap.id, newScrap.title, 'file', newOrder);
+    // 内容を md ファイルとして保存
+    window.api.project.getPath().then(projectPath => {
+      const filePath = `${projectPath}/${newScrap.title}.md`;
+      const result = window.api.file.save(filePath, newScrap.content);
+    });
+    // scraps.jsonに追記する
     window.api.scrap.saveJson(scrapData);
 
     return newScrap.id;
@@ -86,69 +92,101 @@ export const useScrapViewModel = (): {
    * メモ内容の更新
    */
   const updateScrapContent = useCallback(async (id: number, newContent: string) => {
-    // 更新対象 scrap をこの時点で取得（クロージャから分離）
-    const scrapToSave = scraps.find(scrap => scrap.id === id);
-    if (!scrapToSave) return;
+      // 更新対象 scrap をこの時点で取得（クロージャから分離）
+      const scrapToSave = scraps.find(scrap => scrap.id === id);
+      if (!scrapToSave) return;
 
-    setScraps(prev =>
-      prev.map(scrap =>
-        scrap.id === id
-          ? new ScrapModel({
-              content: newContent,
-              title: scrap.getTitle(),
-              order: scrap.getOrder(),
-              id: scrap.id,
-              type: scrap.type
-            })
-          : scrap
-      )
-    );
+      setScraps(prev =>
+        prev.map(scrap =>
+          scrap.id === id
+            ? new ScrapModel({
+                content: newContent,
+                title: scrap.getTitle(),
+                order: scrap.getOrder(),
+                id: scrap.id,
+                type: scrap.type
+              })
+            : scrap
+        )
+      );
 
-    // タイマーがすでにあればキャンセル
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
+      // タイマーがすでにあればキャンセル
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
 
-    // 指定秒後に自動保存
-    const timeInterval = await window.api.project.getInterval();
-    console.log(timeInterval);
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      // 内容を md ファイルとして保存
-      window.api.project.getPath().then(projectPath => {
-        const filePath = `${projectPath}/${scrapToSave.getTitle()}.md`;
-        const result = window.api.file.save(filePath, newContent);
-      });
-      // scraps.json 更新（ファイル名変わらなければ不要かも）
-      const scrapData = generateScrap(id, scrapToSave.getTitle(), scrapToSave.type, scrapToSave.getOrder());
-      window.api.scrap.saveJson(scrapData);
-    }, timeInterval);
-  }, [scraps]);
+      // 指定秒後に自動保存
+      const timeInterval = await window.api.project.getInterval();
+      console.log(timeInterval);
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        // 内容を md ファイルとして保存
+        window.api.project.getPath().then((projectPath) => {
+          const filePath = `${projectPath}/${scrapToSave.getTitle()}.md`;
+          const result = window.api.file.save(filePath, newContent);
+        });
+        // scraps.json 更新（ファイル名変わらなければ不要かも）
+        const scrapData = generateScrap(
+          id,
+          scrapToSave.getTitle(),
+          scrapToSave.type,
+          scrapToSave.getOrder()
+        )
+        window.api.scrap.saveJson(scrapData);
+      }, timeInterval);
+    },
+    [scraps]
+  );
 
   /**
    * メモタイトルの更新
    */
-  const updateScrapTitle = useCallback((id: number, newTitle: string) => {
-    setScraps(prevScraps =>
-      prevScraps.map(scrap => {
-        if (scrap.id === id) {
-          const updatedScrap = new ScrapModel({
-            content: scrap.getContent(),
-            title: newTitle,
-            order: scrap.getOrder(),
-            id: scrap.id,
-            type: scrap.type
-          });
+  const updateScrapTitle = useCallback(async (id: number, newTitle: string) => {
+      const scrap = scraps.find((s) => s.id === id)
+      if (!scrap) return
 
-          const scrapData = generateScrap(scrap.id, scrap.file, scrap.type, scrap.getOrder());
-          scrapData.title = newTitle;
-          window.api.scrap.saveJson(scrapData);
-
-          return updatedScrap;
+      let finalTitle = newTitle;
+      if (finalTitle == '') {
+        // 仮タイトルを生成（例: Untitled 1, Untitled 2…）
+        const base = 'Untitled'
+        let counter = 1
+        const existingTitles = scraps.map((s) => s.getTitle())
+        while (existingTitles.includes(`${base} ${counter}`)) {
+          counter++
         }
-        return scrap;
-      })
-    );
-  }, []);
+        finalTitle = `${base} ${counter}`
+      }
+      // 古いファイルをリネーム
+      const oldFileName = scrap.getTitle() + '.md'
+      const newFileName = finalTitle + '.md'
+      const projectPath = await window.api.project.getPath();
+
+      if (oldFileName !== newFileName) {
+        try {
+          await window.api.file.rename(
+            `${projectPath}/${oldFileName}`,
+            `${projectPath}/${newFileName}`
+          )
+        } catch (err) {
+          console.log('ファイルのリネームに失敗:', err)
+        }
+      }
+
+      const updatedScrap = new ScrapModel({
+        content: scrap.getContent(),
+        title: finalTitle,
+        order: scrap.getOrder(),
+        id: scrap.id,
+        type: scrap.type
+      });
+
+      const scrapData = generateScrap(scrap.id, scrap.file, scrap.type, scrap.getOrder());
+      scrapData.title = finalTitle;
+      window.api.scrap.saveJson(scrapData);
+
+      setScraps((prevScraps) => prevScraps.map((s) => (s.id === id ? updatedScrap : s)))
+    },
+    [scraps]
+  )
 
   /**
    * メモの並び替え
