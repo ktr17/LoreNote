@@ -29,7 +29,7 @@ export const useScrapViewModel = (): {
   useEffect(() => {
     const loadScraps = async () => {
       try {
-        const jsonScraps = await window.api.scrap.loadFromJson();
+        const jsonScraps = await window.api.scrap.loadJson();
 
         const loadedScraps = await Promise.all(
           jsonScraps.map(async (item: any) => {
@@ -69,7 +69,7 @@ export const useScrapViewModel = (): {
     const newOrder = scraps.length;
     const newScrap = new ScrapModel({
       content: '# 新しいメモ\n\nここに内容を入力してください。',
-      title: '新しいメモ',
+      title: 'New Title ' + scraps.length,
       order: newOrder
     });
 
@@ -82,9 +82,6 @@ export const useScrapViewModel = (): {
     return newScrap.id;
   }, [scraps]);
 
-  /**
-   * メモ内容の更新
-   */
   /**
    * メモ内容の更新
    */
