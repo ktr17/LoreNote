@@ -46,7 +46,7 @@ function App(): JSX.Element {
         `${title.replace(/[^a-z0-9\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fa5]/gi, '_').toLowerCase()}.md`
 
       // レンダラープロセスからPreloadプロセスを経由して、メインプロセスの保存処理を呼び出す
-      const result = await window.myApp.saveFile(fileName, content);
+      const result = await window.api.file.save(fileName, content);
 
       if (result) {
         console.log(`Saved: ${result.filePath}`);
@@ -88,7 +88,7 @@ function App(): JSX.Element {
       title: scrap.title,
       order: scrap.order
     }));
-    window.myApp.updateScrapOrder(updatedScraps);
+    window.api.scrap.updateOrder(updatedScraps);
   }, [scraps]);
 
   return (

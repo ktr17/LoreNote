@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import ScrapModel from '../model/ScrapModel';
 import { generateScrap } from '../utils/ScrapUtils';
 
@@ -21,6 +21,7 @@ export const useScrapViewModel = (): {
 } => {
   const [scraps, setScraps] = useState<ScrapModel[]>([]);
   const [selectedScrapId, setSelectedScrapId] = useState<number>(0);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * 初期化処理：scraps.json + mdファイル読み込み
@@ -28,13 +29,13 @@ export const useScrapViewModel = (): {
   useEffect(() => {
     const loadScraps = async () => {
       try {
-        const jsonScraps = await window.projectAPI.loadScrapsFromJson();
+        const jsonScraps = await window.api.scrap.loadFromJson();
 
         const loadedScraps = await Promise.all(
           jsonScraps.map(async (item: any) => {
             const fileName = `${item.title}.md`;
-            const filePath = await window.projectAPI.getProjectPath();
-            const content = await window.myApp.readFile(filePath + '/' + fileName);
+            const filePath = await window.api.project.getPath();
+            const content = await window.api.file.read(filePath + '/' + fileName);
             const title = item.title;
 
             return new ScrapModel({
@@ -76,16 +77,22 @@ export const useScrapViewModel = (): {
     setSelectedScrapId(newScrap.id);
 
     const scrapData = generateScrap(newScrap.id, newScrap.title, 'file', newOrder);
-    window.projectAPI.saveScrapJson(scrapData);
+    window.api.scrap.saveJson(scrapData);
 
     return newScrap.id;
   }, [scraps]);
 
   /**
    * メモ内容の更新
-
    */
-  const updateScrapContent = useCallback((id: number, newContent: string) => {
+  /**
+   * メモ内容の更新
+   */
+  const updateScrapContent = useCallback(async (id: number, newContent: string) => {
+    // 更新対象 scrap をこの時点で取得（クロージャから分離）
+    const scrapToSave = scraps.find(scrap => scrap.id === id);
+    if (!scrapToSave) return;
+
     setScraps(prev =>
       prev.map(scrap =>
         scrap.id === id
@@ -99,7 +106,26 @@ export const useScrapViewModel = (): {
           : scrap
       )
     );
-  }, []);
+
+    // タイマーがすでにあればキャンセル
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // 指定秒後に自動保存
+    const timeInterval = await window.api.project.getInterval();
+    console.log(timeInterval);
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      // 内容を md ファイルとして保存
+      window.api.project.getPath().then(projectPath => {
+        const filePath = `${projectPath}/${scrapToSave.getTitle()}.md`;
+        const result = window.api.file.save(filePath, newContent);
+      });
+      // scraps.json 更新（ファイル名変わらなければ不要かも）
+      const scrapData = generateScrap(id, scrapToSave.getTitle(), scrapToSave.type, scrapToSave.getOrder());
+      window.api.scrap.saveJson(scrapData);
+    }, timeInterval);
+  }, [scraps]);
 
   /**
    * メモタイトルの更新
@@ -118,7 +144,7 @@ export const useScrapViewModel = (): {
 
           const scrapData = generateScrap(scrap.id, scrap.file, scrap.type, scrap.getOrder());
           scrapData.title = newTitle;
-          window.projectAPI.saveScrapJson(scrapData);
+          window.api.scrap.saveJson(scrapData);
 
           return updatedScrap;
         }
@@ -214,7 +240,7 @@ export const useScrapViewModel = (): {
   const addScrapFromFile = useCallback(async (filePaths: string[]) => {
     try {
       const newScraps = await Promise.all(filePaths.map(async (filePath) => {
-        const content = await window.myApp.readFile(filePath);
+        const content = await window.api.file.read(filePath);
         const title = extractTitleFromContent(content) || '読み込みメモ';
         return { content, title };
       }));
