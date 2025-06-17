@@ -8,8 +8,12 @@ import icon from '../../resources/icon.png?asset';
 
 let Store: any;
 let settingStore;
+let scrapsStore;
 
-async function getSettingStore() {
+/**
+ * ホームディレクトリに存在するsetting.jsonを管理するためのstoreを返却する
+ */
+async function getSettingStore(): Promise<any> {
   if (!settingStore) {
     await setupStore();
     const StoreModule = await import('electron-store');
@@ -20,6 +24,22 @@ async function getSettingStore() {
     });
   }
   return settingStore;
+}
+
+/**
+ * ユーザ指定フォルダに格納するscraps.jsonを管理するためのstoreを返却する
+ */
+async function getScrapsStore(): Promise<any> {
+  if (!scrapsStore) {
+    const settingStore = await getSettingStore();
+    const projectPath = settingStore.get('projectPath', null);
+
+    scrapsStore = new Store({
+      name: 'scraps',
+      cwd: projectPath,
+    })
+  }
+  return scrapsStore;
 }
 
 // ウィンドウを作成
@@ -56,8 +76,7 @@ function createWindow(): void {
     return newOrder;
   }
 
-
-  mainWindow.on('ready-to-show', () => mainWindow.show());
+  mainWindow.on('ready-to-show', () => mainWindow.show())
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
@@ -220,12 +239,36 @@ ipcMain.handle('read-file', async (event, filePath: string) => {
 });
 
 /**
+ * ファイル名を取得する
+ */
+ipcMain.handle('get-title', async (_event, id: string) => {
+  const scrapsStore = await getScrapsStore();
+  const scraps: Scrap[] = scrapsStore.get('scraps', []);
+  const scrap = scraps.find((s) => s.id === id);
+  return scrap?.title ?? null;
+});
+
+/**
+ * ファイル名を変更する
+ */
+ipcMain.handle('rename', async (_event, oldPath: string, newPath: string) => {
+  try {
+    await fs.promises.rename(oldPath, newPath);
+    return true;
+  } catch (err) {
+    console.error('ファイル名の変更に失敗:', err);
+    return false;
+  }
+});
+
+
+/**
  * メモの情報を管理用JSON(scraps.json)に保存する
  */
 ipcMain.handle('save-scrap-json', async (_event, data) => {
   // await setupStore();
   const settingStore = await getSettingStore();
-  const projectPath = await settingStore.get('projectPath', null);
+  const projectPath = settingStore.get('projectPath', null);
 
   const scrapsStore = new Store({
     name: 'scraps',

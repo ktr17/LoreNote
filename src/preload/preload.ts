@@ -44,6 +44,15 @@ const api = {
     async read(filePath: string): Promise<string> {
       return await ipcRenderer.invoke('read-file', filePath);
     },
+    /**
+     * ファイル名を変更します。
+     * @param oldPath 変更前のファイル名を含む絶対パス
+     * @param newPath 変更後のファイル名を含む絶対パス
+     * @returns ファイル名の変更に成功すればtrue、失敗すればfalse
+     */
+    async rename(oldPath: string, newPath: string): Promise<boolean> {
+      return await ipcRenderer.invoke('rename', oldPath, newPath);
+    },
   },
 
   scrap: {
@@ -81,7 +90,15 @@ const api = {
      */
     async loadJson(): Promise<Scrap[]> {
       return await ipcRenderer.invoke('load-scraps-from-json');
-    }
+    },
+    /**
+     * UUIDからtitleを取り出します。
+     * @params uuid
+     * @returns scraps.jsonに記載されているtitle
+     */
+    async getTitle(id: string): Promise<string> {
+      return await ipcRenderer.invoke('get-title', id);
+    },
   },
 
   project: {
