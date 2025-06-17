@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import debounce from 'lodash.debounce';
 import MDEditor from './MarkdownEditor';
 import Button from './Button';
 import ScrapModel from '../model/ScrapModel';
@@ -33,13 +34,9 @@ const Scrap = ({
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
   const scrapRef = useRef<HTMLDivElement>(null);
-  const [initialX, setInitialX] = useState(0);
-  const [initialY, setInitialY] = useState(0);
-  // const [isDragging, setIsDragging] = useState(false); // Removed unused variable
 
   useEffect(() => {
     setTitle(scrap.getTitle());
-    setContent(scrap.getContent());
   }, [scrap]);
 
   const extractTitleFromContent = (text: string): string => {
@@ -61,20 +58,37 @@ const Scrap = ({
     [scrap.id, onContentChange, onTitleChange, title]
   );
 
+  /**
+   * タイトルを編集したとき、指定時間経過後にファイル名を変更する
+   */
+  const updateTitle = useMemo(() =>
+    debounce(async (id: string, newTitle: string) => {
+      try {
+        const projectPath = await window.api.project.getPath();
+        const oldTitle = await window.api.scrap.getTitle(id);
+        const oldPath = `${projectPath}/${oldTitle}.md`;
+        const newPath = `${projectPath}/${newTitle}.md`;
+
+        await window.api.file.rename(oldPath, newPath);
+        await window.api.scrap.updateTitle(id, newTitle);
+        onTitleChange(scrap.id, newTitle);
+      } catch (error) {
+        console.error('タイトル更新エラー: ', error);
+      }
+    }, 2000) // 最後の入力から2000ms後に実行
+  , [onTitleChange]);
+
+  /**
+   * メモのタイトル(ファイル名)を変更したときに、scraps.jsonとファイル名を変更する
+   */
   const handleTitleChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    onTitleChange(scrap.id, newTitle); // UI 側への通知
-
-    try {
-      await window.api.scrap.updateTitle(scrap.id, newTitle); // electron-store 側を更新
-    } catch (error) {
-      console.error('タイトル更新エラー:', error);
-    }
+    onTitleChange(scrap.id, newTitle);
   };
 
-
-  const handleSave = async (): Promise<void> => { // Added return type
+  const handleSave = async (): Promise<void> => {
+    // Added return type
     try {
       const projectPath = await window.api.project.getPath();
       const filePath = projectPath
@@ -132,26 +146,28 @@ const Scrap = ({
         <input
           type="text"
           value={title}
-          onChange={handleTitleChange}
+          onChange={(e) => {
+            handleTitleChange(e);
+          }}
           placeholder="タイトルを入力"
           className="scrap-title-input"
         />
         <div className="scrap-actions">
-          <Button onClick={handleSave} variant="primary" size="small">保存</Button>
-          <Button onClick={handleDelete} variant="danger" size="small">削除</Button>
-          <Button onClick={selectFolder} variant="secondary" size="small">選択</Button>
+          <Button onClick={handleSave} variant="primary" size="small">
+            保存
+          </Button>
+          <Button onClick={handleDelete} variant="danger" size="small">
+            削除
+          </Button>
         </div>
       </div>
-
-      {isSelected && (
-        <div className="scrap-editor">
-          <MDEditor
-            value={content}
-            onChange={handleContentChange}
-            placeholder="ここにメモを入力してください"
-          />
-        </div>
-      )}
+      <div className="scrap-editor">
+        <MDEditor
+          value={content}
+          onChange={handleContentChange}
+          placeholder="ここにメモを入力してください"
+        />
+      </div>
     </div>
   );
 };
