@@ -1,14 +1,11 @@
-# lore-note
+# Lore Note
 ## Overview
 
 📘 LoreNote – 学びを、知識に変えるメモアプリ
-ひらめきを逃さない。学びを積み重ねる。
-
 LoreNoteは、あなたのナレッジを“使える形”で蓄積する、エンジニアのための知識メモアプリです。シンプルだから、頭の中もスッキリ。
-
 コンセプトは、「1つのメモに、1つのナレッジ」。
 
-学んだことを**小さな塊（チャンク）**で記録するから、情報の整理・検索が圧倒的にラク。
+学んだことを**小さな塊**で記録するため、情報の整理・検索が圧倒的にラク。
 
 メモは自由に並び替え可能。思考の流れに合わせて構造化も簡単。
 
@@ -49,6 +46,15 @@ volta install node@22.13.1
 volta pin node@22.13.1
 ```
 
+## Test
+
+| Layer        | Test Type  | Tool                                     |
+| -------- | -------- | ----------------------------------------- |
+| Renderer | 単体・UIテスト | **Vitest** + **Testing Library**          |
+| Renderer | コンポーネント  | **@testing-library/react**                |
+| Preload  | 単体テスト    | **Vitest**                                |
+| Main     | 単体/統合テスト | **Vitest**                 |
+<!-- | E2E（統合）  | 実行時シナリオ  | **Playwright** or **Spectron**（Electron用） | -->
 
 ## Folder structure
 
