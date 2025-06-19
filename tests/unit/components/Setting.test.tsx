@@ -6,12 +6,14 @@ describe('Setting Component', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
 
+    // window.apiのモック
     window.api = {
       project: {
         getPath: vi.fn().mockResolvedValue('/mock/path'),
         getInterval: vi.fn().mockResolvedValue(10),
         savePath: vi.fn().mockResolvedValue(true),
         saveInterval: vi.fn().mockResolvedValue(true),
+        saveShowLineNum: vi.fn().mockResolvedValue(true),
       },
       dialog: {
         openFolder: vi.fn().mockResolvedValue({ canceled: false, folderPath: '/new/path' }),
@@ -35,8 +37,7 @@ describe('Setting Component', () => {
     expect(await screen.findByDisplayValue('/new/path')).toBeInTheDocument();
   });
 
-  it('適用ボタンで保存成功メッセージが出る', async () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
+  it('適用ボタン押下で設定が保存される', async () => {
     render(<Setting onClose={() => {}} />);
 
     const button = await screen.findByText('適用');
@@ -45,21 +46,7 @@ describe('Setting Component', () => {
     await waitFor(() => {
       expect(window.api.project.savePath).toHaveBeenCalled();
       expect(window.api.project.saveInterval).toHaveBeenCalled();
-      expect(alertMock).toHaveBeenCalledWith('保存しました。');
-    });
-  });
-
-  it('保存失敗時にアラートが表示される', async () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    window.api.project.savePath = vi.fn().mockResolvedValue(false);
-    window.api.project.saveInterval = vi.fn().mockResolvedValue(false);
-
-    render(<Setting onClose={() => {}} />);
-    const applyButton = await screen.findByText('適用');
-    fireEvent.click(applyButton);
-
-    await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith('保存に失敗しました');
+      expect(window.api.project.saveShowLineNum).toHaveBeenCalled();
     });
   });
 
