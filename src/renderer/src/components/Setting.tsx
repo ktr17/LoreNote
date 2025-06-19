@@ -7,6 +7,7 @@ interface SettingProps {
 const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
   const [projectPath, setProjectPath] = useState<string>('');
   const [saveInterval, setSaveInterval] = useState<number>(0);
+  const [showLineNum, setShowLineNum] = useState<number>(1);
 
   useEffect(() => {
     const loadProjectPath = async (): Promise<void> => {
@@ -24,20 +25,25 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
         console.error('getIntervalTime でエラー:', error);
       }
     };
+    const loadShowLineNum = async (): Promise<void> => {
+      const lineNum = await window.api.project.getShowLineNum();
+      setShowLineNum(lineNum);
+      console.log('lineNum: ' + lineNum);
+    };
     loadProjectPath();
     loadIntervalTime();
+    loadShowLineNum();
   }, []);
 
 
   const handleApply = async (): Promise<void> => {
     const resultSavePath: any = await window.api.project.savePath(projectPath);
     const resultSaveInterval: any = await window.api.project.saveInterval(saveInterval);
-    if (resultSavePath || resultSaveInterval) {
+    const resultSaveShowLineNum: any = await window.api.project.saveShowLineNum(showLineNum);
+    if (resultSavePath || resultSaveInterval || resultSaveShowLineNum) {
       // ファイル保存処理
-      alert('保存しました。');
       console.log('保存しました');
     } else {
-      alert('保存に失敗しました')
       console.log('保存失敗')
     }
   };
@@ -138,6 +144,23 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             >
               ...
             </button>
+          </div>
+          <div style={{ ...settingItem, display: 'flex', alignItems: 'center'}}>
+            <label style={{ marginRight: '10px', whiteSpace: 'nowrap'}}>表示行数</label>
+            <input
+              type="number"
+              min={1}
+              value={showLineNum}
+              onChange={(e) => setShowLineNum(Number(e.target.value))}
+              style={{
+                width: '80px',
+                padding: '8px',
+                backgroundColor: '#2b2b2b',
+                border: '1px solid #555',
+                borderRadius: '5px',
+                color: '#fff',
+                marginRight: '8px'
+              }}/>
           </div>
 
           {/* 保存設定 */}

@@ -365,7 +365,23 @@ ipcMain.handle('load-scraps-from-json', async () => {
     cwd: projectPath,
   });
   return scrapsStore.get('scraps', null);
-})
+});
+
+/**
+ * エディタの表示行数を設定する
+ */
+ipcMain.handle('save-show-line-num', async (_event, showLineNum: number) => {
+  const settingStore = await getSettingStore();
+  settingStore.set('showLineNum', showLineNum);
+});
+
+/**
+ * エディタの表示行数を取得する
+ */
+ipcMain.handle('get-show-line-num', async () => {
+  const settingStore = await getSettingStore();
+  return settingStore.get('showLineNum');
+});
 
 // ファイル操作 IPC
 ipcMain.handle('open-file', openFile);
