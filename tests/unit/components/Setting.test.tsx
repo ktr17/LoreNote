@@ -13,7 +13,8 @@ describe('Setting Component', () => {
         getInterval: vi.fn().mockResolvedValue(10),
         savePath: vi.fn().mockResolvedValue(true),
         saveInterval: vi.fn().mockResolvedValue(true),
-        saveShowLineNum: vi.fn().mockResolvedValue(true),
+        saveShowLineNum: vi.fn().mockResolvedValue(8),
+        getShowLineNum: vi.fn().mockResolvedValue(90),
       },
       dialog: {
         openFolder: vi.fn().mockResolvedValue({ canceled: false, folderPath: '/new/path' }),
@@ -26,6 +27,7 @@ describe('Setting Component', () => {
 
     expect(await screen.findByDisplayValue('/mock/path')).toBeInTheDocument();
     expect(await screen.findByDisplayValue('10')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('90')).toBeInTheDocument();
   });
 
   it('フォルダ選択ボタンでパスが変更される', async () => {
