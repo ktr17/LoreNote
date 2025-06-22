@@ -9,12 +9,14 @@ interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  maxEditorHeight?: number;
 }
 
 export const MarkdownEditor = ({
   value,
   onChange,
-  placeholder = 'ここに内容を入力してください'
+  placeholder = 'ここに内容を入力してください',
+  maxEditorHeight,
 }: MarkdownEditorProps): JSX.Element => {
   const editorOptions = useMemo(() => {
     return {
@@ -23,8 +25,9 @@ export const MarkdownEditor = ({
       placeholder: placeholder,
       status: false,
       toolbar: false,
+      maxHeight: `${maxEditorHeight}px`,
     } as Options
-  }, [placeholder])
+  }, [placeholder, maxEditorHeight])
 
   const handleChange = (value: string): void => {
     onChange(value)

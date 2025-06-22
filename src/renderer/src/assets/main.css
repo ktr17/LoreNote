@@ -118,20 +118,8 @@ body {
   padding: 1rem;
 }
 
-/* Override SimpleMDE styles */
-.markdown-editor .EasyMDEContainer {
-  border: none;
-}
-
 .markdown-editor .CodeMirror {
-  border: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-.markdown-editor .editor-toolbar {
-  border: none;
-  background-color: var(--bg-light);
+  height: 100% !important;
 }
 
 /* Responsive styles */
@@ -141,17 +129,17 @@ body {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .scrap-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .scrap-title-input {
     width: 100%;
   }
-  
+
   .scrap-actions {
     width: 100%;
     justify-content: flex-end;

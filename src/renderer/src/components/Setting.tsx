@@ -146,7 +146,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             </button>
           </div>
           <div style={{ ...settingItem, display: 'flex', alignItems: 'center'}}>
-            <label style={{ marginRight: '10px', whiteSpace: 'nowrap'}}>表示行数</label>
+            <label style={{ marginRight: '10px', whiteSpace: 'nowrap'}}>表示サイズ(px)</label>
             <input
               type="number"
               min={1}

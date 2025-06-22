@@ -16,6 +16,7 @@ interface ScrapProps {
   onDragOver: (index: number) => void;
   onDragEnd: () => void;
   onSave: (id: number, content: string, title: string, filePath?: string) => void;
+  maxEditorHeight?: number;
 }
 
 const Scrap = ({
@@ -30,6 +31,7 @@ const Scrap = ({
   onDragOver,
   onDragEnd,
   onSave,
+  maxEditorHeight,
 }: ScrapProps): JSX.Element => {
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
@@ -62,20 +64,20 @@ const Scrap = ({
    * タイトルを編集したとき、指定時間経過後にファイル名を変更する
    */
   const updateTitle = useMemo(() =>
-    debounce(async (id: string, newTitle: string) => {
-      try {
-        const projectPath = await window.api.project.getPath();
-        const oldTitle = await window.api.scrap.getTitle(id);
-        const oldPath = `${projectPath}/${oldTitle}.md`;
-        const newPath = `${projectPath}/${newTitle}.md`;
+      debounce(async (id: string, newTitle: string) => {
+        try {
+          const projectPath = await window.api.project.getPath();
+          const oldTitle = await window.api.scrap.getTitle(id);
+          const oldPath = `${projectPath}/${oldTitle}.md`;
+          const newPath = `${projectPath}/${newTitle}.md`;
 
-        await window.api.file.rename(oldPath, newPath);
-        await window.api.scrap.updateTitle(id, newTitle);
-        onTitleChange(scrap.id, newTitle);
-      } catch (error) {
-        console.error('タイトル更新エラー: ', error);
-      }
-    }, 2000) // 最後の入力から2000ms後に実行
+          await window.api.file.rename(oldPath, newPath);
+          await window.api.scrap.updateTitle(id, newTitle);
+          onTitleChange(scrap.id, newTitle);
+        } catch (error) {
+          console.error('タイトル更新エラー: ', error);
+        }
+      }, 2000) // 最後の入力から2000ms後に実行
   , [onTitleChange]);
 
   /**
@@ -161,11 +163,12 @@ const Scrap = ({
           </Button>
         </div>
       </div>
-      <div className="scrap-editor">
+      <div className="scrap-editor" >
         <MDEditor
           value={content}
           onChange={handleContentChange}
           placeholder="ここにメモを入力してください"
+          maxEditorHeight={maxEditorHeight}
         />
       </div>
     </div>
