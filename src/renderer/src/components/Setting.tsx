@@ -7,7 +7,8 @@ interface SettingProps {
 const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
   const [projectPath, setProjectPath] = useState<string>('');
   const [saveInterval, setSaveInterval] = useState<number>(0);
-  const [showLineNum, setShowLineNum] = useState<number>(1);
+  const [maxEditorHeight, setMaxEditorHeight] = useState<number>(1);
+  const { setEditorMaxHeight } = useSettingViewModel();
 
   useEffect(() => {
     const loadProjectPath = async (): Promise<void> => {
@@ -25,22 +26,22 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
         console.error('getIntervalTime でエラー:', error);
       }
     };
-    const loadShowLineNum = async (): Promise<void> => {
-      const lineNum = await window.api.project.getShowLineNum();
-      setShowLineNum(lineNum);
-      console.log('lineNum: ' + lineNum);
+    const loadMaxEditorHeight = async (): Promise<void> => {
+      // Setting.jsonから初期値を取得して、設定画面に表示する
+      const lineNum = await window.api.project.getMaxEditorHeight();
+      setMaxEditorHeight(lineNum);
     };
     loadProjectPath();
     loadIntervalTime();
-    loadShowLineNum();
+    loadMaxEditorHeight();
   }, []);
 
 
   const handleApply = async (): Promise<void> => {
     const resultSavePath: any = await window.api.project.savePath(projectPath);
     const resultSaveInterval: any = await window.api.project.saveInterval(saveInterval);
-    const resultSaveShowLineNum: any = await window.api.project.saveShowLineNum(showLineNum);
-    if (resultSavePath || resultSaveInterval || resultSaveShowLineNum) {
+    const resultSaveMaxEditorHeight: any = await window.api.project.saveShowLineNum(maxEditorHeight);
+    if (resultSavePath || resultSaveInterval || resultSaveMaxEditorHeight) {
       // ファイル保存処理
       console.log('保存しました');
     } else {
@@ -150,8 +151,8 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             <input
               type="number"
               min={1}
-              value={showLineNum}
-              onChange={(e) => setShowLineNum(Number(e.target.value))}
+              value={maxEditorHeight}
+              onChange={(e) => setMaxEditorHeight(Number(e.target.value))}
               style={{
                 width: '80px',
                 padding: '8px',

@@ -370,17 +370,17 @@ ipcMain.handle('load-scraps-from-json', async () => {
 /**
  * エディタの表示行数を設定する
  */
-ipcMain.handle('save-show-line-num', async (_event, showLineNum: number) => {
+ipcMain.handle('save-max-editor-height', async (_event, maxEditorHeight: number) => {
   const settingStore = await getSettingStore();
-  settingStore.set('showLineNum', showLineNum);
+  settingStore.set('maxEditorHeight', maxEditorHeight);
 });
 
 /**
  * エディタの表示行数を取得する
  */
-ipcMain.handle('get-show-line-num', async () => {
+ipcMain.handle('get-max-editor-height', async () => {
   const settingStore = await getSettingStore();
-  return settingStore.get('showLineNum');
+  return settingStore.get('maxEditorHeight');
 });
 
 // ファイル操作 IPC

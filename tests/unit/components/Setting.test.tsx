@@ -14,7 +14,7 @@ describe('Setting Component', () => {
         savePath: vi.fn().mockResolvedValue(true),
         saveInterval: vi.fn().mockResolvedValue(true),
         saveShowLineNum: vi.fn().mockResolvedValue(8),
-        getShowLineNum: vi.fn().mockResolvedValue(90),
+        getMaxEditorHeight: vi.fn().mockResolvedValue(90),
       },
       dialog: {
         openFolder: vi.fn().mockResolvedValue({ canceled: false, folderPath: '/new/path' }),

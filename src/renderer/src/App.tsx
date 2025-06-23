@@ -23,7 +23,7 @@ function App(): JSX.Element {
     deleteScrap,
     addScrapFromFile,
     openProjectFiles,
-    editorMaxHeight
+    maxEditorHeight
   } = useScrapViewModel();
 
   useEffect(() => {
@@ -117,7 +117,7 @@ function App(): JSX.Element {
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
-              maxEditorHeight={editorMaxHeight}
+              maxEditorHeight={maxEditorHeight}
             />
           ))}
         </div>

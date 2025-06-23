@@ -22,7 +22,7 @@ export const useScrapViewModel = (): {
   const [scraps, setScraps] = useState<ScrapModel[]>([]);
   const [selectedScrapId, setSelectedScrapId] = useState<number>(0);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [editorMaxHeight, setEditorMaxHeight] = useState<number>(0);
+  const [maxEditorHeight, setEditorMaxHeight] = useState<number>(0);
 
   /**
    * 初期化処理：scraps.json + mdファイル読み込み
@@ -63,7 +63,7 @@ export const useScrapViewModel = (): {
     // setting.jsonから設定値を取得する
     const fetchEditorSetting = async () => {
       try {
-        const lines = await window.api.project.getShowLineNum();
+        const lines = await window.api.project.getMaxEditorHeight();
         setEditorMaxHeight(Number(lines));
       } catch (e) {
         console.error('エディタ設定の読み込みに失敗: ', e);
@@ -348,7 +348,7 @@ export const useScrapViewModel = (): {
     getSelectedScrap,
     addScrapFromFile,
     openProjectFiles,
-    editorMaxHeight
+    maxEditorHeight
   };
 };
 

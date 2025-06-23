@@ -138,18 +138,18 @@ const api = {
 
     /**
      * エディタの表示行数を設定します。
-     * @params showLineNum 表示行数
+     * @params maxEditorHeight 表示行数
      * @returns 設定成功時はtrue
      */
     async saveShowLineNum(lineNum: number): Promise<boolean> {
-      return await ipcRenderer.invoke('save-show-line-num', lineNum);
+      return await ipcRenderer.invoke('save-max-editor-height', lineNum);
     },
     /**
      * エディタの表示行数を取得します。
      * @returns 表示行数
      */
-    async getShowLineNum(): Promise<number | null> {
-      return await ipcRenderer.invoke('get-show-line-num');
+    async getMaxEditorHeight(): Promise<number | null> {
+      return await ipcRenderer.invoke('get-max-editor-height');
     },
   },
 
