@@ -13,7 +13,7 @@ describe('Setting Component', () => {
         getInterval: vi.fn().mockResolvedValue(10),
         savePath: vi.fn().mockResolvedValue(true),
         saveInterval: vi.fn().mockResolvedValue(true),
-        saveShowLineNum: vi.fn().mockResolvedValue(8),
+        saveMaxEditorHeight: vi.fn().mockResolvedValue(8),
         getMaxEditorHeight: vi.fn().mockResolvedValue(90),
       },
       dialog: {
@@ -48,7 +48,7 @@ describe('Setting Component', () => {
     await waitFor(() => {
       expect(window.api.project.savePath).toHaveBeenCalled();
       expect(window.api.project.saveInterval).toHaveBeenCalled();
-      expect(window.api.project.saveShowLineNum).toHaveBeenCalled();
+      expect(window.api.project.saveMaxEditorHeight).toHaveBeenCalled();
     });
   });
 

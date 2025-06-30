@@ -3,6 +3,7 @@ import Button from './components/Button';
 import Scrap from './components/Scrap';
 import Setting from './components/Setting';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
+import useSettingViewModel from './viewmodel/useSettingViewModel';
 import './assets/main.css';
 import { initializeProject } from './utils/fileUtils';
 import { useLocation } from 'react-router-dom';
@@ -23,8 +24,15 @@ function App(): JSX.Element {
     deleteScrap,
     addScrapFromFile,
     openProjectFiles,
-    maxEditorHeight
   } = useScrapViewModel();
+
+  const { maxEditorHeight, setMaxEditorHeight } = useSettingViewModel()
+  // 🔍 初期取得ログ
+  console.log('📦 App.tsx: maxEditorHeight from useSettingViewModel:', maxEditorHeight);
+  // 🔍 値が変更されたら検知
+  useEffect(() => {
+    console.log('📡 App.tsx useEffect: maxEditorHeight updated:', maxEditorHeight);
+  }, [maxEditorHeight]);
 
   useEffect(() => {
     setShowSetting(location.hash === '#setting');
@@ -103,7 +111,27 @@ function App(): JSX.Element {
 
       <main className="app-content">
         <div className="scraps-container">
-          {scraps.map((scrap, index) => (
+        {scraps.map((scrap, index) => {
+            console.log(`🧩 Rendering Scrap ${scrap.id} with maxEditorHeight:`, maxEditorHeight);
+            return (
+              <Scrap
+                key={scrap.id}
+                scrap={scrap}
+                isSelected={scrap.id === selectedScrapId}
+                onContentChange={updateScrapContent}
+                onTitleChange={updateScrapTitle}
+                onSelect={setSelectedScrapId}
+                onDelete={deleteScrap}
+                onSave={handleSaveScrap}
+                index={index}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                maxEditorHeight={maxEditorHeight}
+              />
+            );
+          })}
+          {/* {scraps.map((scrap, index) => (
             <Scrap
               key={scrap.id}
               scrap={scrap}
@@ -119,10 +147,14 @@ function App(): JSX.Element {
               onDragEnd={handleDragEnd}
               maxEditorHeight={maxEditorHeight}
             />
-          ))}
+          ))} */}
         </div>
       </main>
-      {showSetting && <Setting onClose={() => setShowSetting(false)} />}
+      {showSetting && (
+        <Setting
+          onClose={() => setShowSetting(false)}
+        />
+      )}
     </div>
   );
 }

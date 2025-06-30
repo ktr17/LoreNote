@@ -141,7 +141,7 @@ const api = {
      * @params maxEditorHeight 表示行数
      * @returns 設定成功時はtrue
      */
-    async saveShowLineNum(lineNum: number): Promise<boolean> {
+    async saveMaxEditorHeight(lineNum: number): Promise<boolean> {
       return await ipcRenderer.invoke('save-max-editor-height', lineNum);
     },
     /**

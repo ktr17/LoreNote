@@ -1,15 +1,17 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 
 // Markdownエディタ用のモジュール
 import SimpleMde from 'react-simplemde-editor'
 import 'easymde/dist/easymde.min.css'
 import type { Options } from 'easymde'
+import useSettingViewModel from '../viewmodel/useSettingViewModel';
+
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  maxEditorHeight?: number;
+  maxEditorHeight: number;
 }
 
 export const MarkdownEditor = ({
@@ -18,7 +20,11 @@ export const MarkdownEditor = ({
   placeholder = 'ここに内容を入力してください',
   maxEditorHeight,
 }: MarkdownEditorProps): JSX.Element => {
+  console.log('📦 MarkdownEditor render:', maxEditorHeight);
+
   const editorOptions = useMemo(() => {
+    console.log('editorOptions updated:', maxEditorHeight);
+
     return {
       autofocus: false,
       spellChecker: false,
@@ -28,7 +34,9 @@ export const MarkdownEditor = ({
       maxHeight: `${maxEditorHeight}px`,
     } as Options
   }, [placeholder, maxEditorHeight])
-
+  useEffect(() => {
+    console.log('エディタ側で受け取った maxEditorHeight:', maxEditorHeight);
+  }, [maxEditorHeight]);
   const handleChange = (value: string): void => {
     onChange(value)
   }

@@ -16,7 +16,7 @@ interface ScrapProps {
   onDragOver: (index: number) => void;
   onDragEnd: () => void;
   onSave: (id: number, content: string, title: string, filePath?: string) => void;
-  maxEditorHeight?: number;
+  maxEditorHeight: number;
 }
 
 const Scrap = ({
@@ -36,10 +36,14 @@ const Scrap = ({
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
   const scrapRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     setTitle(scrap.getTitle());
   }, [scrap]);
+  // debug
+  useEffect(() => {
+    console.log('Scrap.tsx側です。', maxEditorHeight);
+  }, [maxEditorHeight])
+  // debug
 
   const extractTitleFromContent = (text: string): string => {
     const firstLine = text.split('\n')[0].replace(/^#\s*/, '');
@@ -59,7 +63,9 @@ const Scrap = ({
     },
     [scrap.id, onContentChange, onTitleChange, title]
   );
-
+  useEffect(() => {
+    console.log('✅ Scrap.tsxのmaxEditorHeight:', maxEditorHeight);
+  }, [maxEditorHeight]);
   /**
    * タイトルを編集したとき、指定時間経過後にファイル名を変更する
    */
@@ -105,8 +111,8 @@ const Scrap = ({
     }
   };
 
-  const handleDelete = (): void => onDelete(scrap.id); // Added return type
-  const handleClick = (): void => onSelect(scrap.id); // Added return type
+  const handleDelete = (): void => onDelete(scrap.id);
+  const handleClick = (): void => onSelect(scrap.id);
 
 
   const handleDragStart = (e: React.DragEvent): void => {
