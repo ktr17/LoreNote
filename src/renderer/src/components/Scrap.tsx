@@ -87,24 +87,8 @@ const Scrap = ({
     onTitleChange(scrap.id, newTitle);
   };
 
-  const handleSave = async (): Promise<void> => {
-    // Added return type
-    try {
-      const projectPath = await window.api.project.getPath();
-      const filePath = projectPath
-        ? `${projectPath}/${title}.md`
-        : (await window.api.dialog.openFile()).filePath;
-
-      if (filePath) {
-        await onSave(scrap.id, content, title, filePath);
-      }
-    } catch (error) {
-      console.error('保存エラー:', error);
-    }
-  };
-
-  const handleDelete = (): void => onDelete(scrap.id); // Added return type
-  const handleClick = (): void => onSelect(scrap.id); // Added return type
+  const handleDelete = (): void => onDelete(scrap.id);
+  const handleClick = (): void => onSelect(scrap.id);
 
 
   const handleDragStart = (e: React.DragEvent): void => {
@@ -153,9 +137,6 @@ const Scrap = ({
           className="scrap-title-input"
         />
         <div className="scrap-actions">
-          <Button onClick={handleSave} variant="primary" size="small">
-            保存
-          </Button>
           <Button onClick={handleDelete} variant="danger" size="small">
             削除
           </Button>
