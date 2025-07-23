@@ -1,3 +1,4 @@
+import { ConsoleProperty } from './../../../../node_modules/vitest/node_modules/vite/dist/node/index.d';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import debounce from 'lodash.debounce';
 import ScrapModel from '../model/ScrapModel';
@@ -227,22 +228,27 @@ export const useScrapViewModel = (): {
   /**
    * メモの削除
    */
-  const deleteScrap = useCallback((id: number) => {
-    setScraps(prevScraps => {
-      const filtered = prevScraps.filter(scrap => scrap.id !== id);
-      if (filtered.length > 0 && id === selectedScrapId) {
-        setSelectedScrapId(filtered[0].id);
-      }
-      return filtered.map((scrap, index) => new ScrapModel({
-        content: scrap.getContent(),
-        title: scrap.getTitle(),
-        order: index,
-        id: scrap.id,
-        type: scrap.type
-      }));
-
-    });
-  }, [selectedScrapId]);
+  const deleteScrap = useCallback(
+    (id: number) => {
+      setScraps((prevScraps) => {
+        const filtered = prevScraps.filter((scrap) => scrap.id !== id)
+        if (filtered.length > 0 && id === selectedScrapId) {
+          setSelectedScrapId(filtered[0].id)
+        }
+        return filtered.map(
+          (scrap, index) =>
+            new ScrapModel({
+              content: scrap.getContent(),
+              title: scrap.getTitle(),
+              order: index,
+              id: scrap.id,
+              type: scrap.type
+            })
+        )
+      })
+    },
+    [selectedScrapId]
+  )
 
   /**
    * 選択中のメモを取得
