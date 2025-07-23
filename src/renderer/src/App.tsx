@@ -3,7 +3,6 @@ import Button from './components/Button';
 import Scrap from './components/Scrap';
 import Setting from './components/Setting';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
-import './assets/main.css';
 import { initializeProject } from './utils/fileUtils';
 import { useLocation } from 'react-router-dom';
 
@@ -95,11 +94,10 @@ function App(): JSX.Element {
     <div className="app-container">
       <header className="app-header">
         <h1 className="app-title">LoreNote</h1>
-        <Button onClick={addScrap} variant="primary">
+        <Button onClick={addScrap} variant="primary" size="addBtn">
           新しいメモを追加
         </Button>
       </header>
-
       <main className="app-content">
         <div className="scraps-container">
           {scraps.map((scrap, index) => (
