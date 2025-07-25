@@ -1,9 +1,8 @@
 import { Menu, MenuItemConstructorOptions, BrowserWindow } from 'electron';
-import * as path from 'path'
+import * as path from 'path';
 
 let settingWindow: BrowserWindow | null = null;
 const isDev = import.meta.env.MODE === 'development';
-
 
 export function createMenu(): void {
   const isMac = process.platform === 'darwin';
@@ -17,7 +16,8 @@ export function createMenu(): void {
             submenu: [
               { role: 'about' },
               { type: 'separator' },
-              { label: 'setting',
+              {
+                label: 'setting',
                 click: async (): Promise<void> => {
                   if (settingWindow) {
                     settingWindow.focus();
@@ -34,13 +34,15 @@ export function createMenu(): void {
                       preload: path.join(__dirname, '../preload/preload.js'),
                       nodeIntegration: true,
                       contextIsolation: true,
-                      sandbox: false
+                      sandbox: false,
                     },
                   });
                   if (isDev) {
                     settingWindow.loadURL('http://localhost:5173/#setting');
                   } else {
-                    settingWindow.loadFile('../renderer/index.html', { hash: 'setting' });
+                    settingWindow.loadFile('../renderer/index.html', {
+                      hash: 'setting',
+                    });
                   }
 
                   settingWindow.once('ready-to-show', () => {
@@ -48,10 +50,10 @@ export function createMenu(): void {
                   });
 
                   settingWindow.on('closed', () => {
-                    console.log("閉じるボタンを押しました。")
+                    console.log('閉じるボタンを押しました。');
                     settingWindow = null;
                   });
-                }
+                },
               },
               { type: 'separator' },
               { role: 'services' },
@@ -60,15 +62,15 @@ export function createMenu(): void {
               { role: 'hideOthers' },
               { role: 'unhide' },
               { type: 'separator' },
-              { role: 'quit' }
-            ]
-          }
+              { role: 'quit' },
+            ],
+          },
         ]
       : []),
     // { role: 'fileMenu' }
     {
       label: 'ファイル',
-      submenu: [isMac ? { role: 'close' } : { role: 'quit' }]
+      submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
     },
     // { role: 'editMenu' }
     {
@@ -80,7 +82,8 @@ export function createMenu(): void {
         { role: 'cut' },
         { role: 'copy' },
         { role: 'paste' },
-        ...(isMac ? [
+        ...(isMac
+          ? [
               { role: 'pasteAndMatchStyle' },
               { role: 'delete' },
               { role: 'selectAll' },
@@ -89,19 +92,16 @@ export function createMenu(): void {
                 label: 'Speech',
                 submenu: [
                   {
-                    role: 'startSpeaking'
+                    role: 'startSpeaking',
                   },
                   {
-                    role: 'stopSpeaking'
-                  }
-                ]
-            }
-        ] : [
-          { role: 'delete' },
-          { type: 'separator' },
-          { role: 'selectAll' }
-        ])
-      ]
+                    role: 'stopSpeaking',
+                  },
+                ],
+              },
+            ]
+          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+      ],
     },
     // { role: 'viewMenu' }
     {
@@ -115,8 +115,8 @@ export function createMenu(): void {
         { role: 'zoomIn' },
         { role: 'zoomOut' },
         { type: 'separator' },
-        { role: 'togglefullscreen' }
-      ]
+        { role: 'togglefullscreen' },
+      ],
     },
     // { role: 'windowMenu' }
     {
@@ -124,15 +124,15 @@ export function createMenu(): void {
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
-        ...(isMac ? [
-          { type: 'separator' },
-          { role: 'front' },
-          { type: 'separator' },
-          { role: 'window' }
-        ] : [
-          { role: 'close' }
-        ])
-      ]
+        ...(isMac
+          ? [
+              { type: 'separator' },
+              { role: 'front' },
+              { type: 'separator' },
+              { role: 'window' },
+            ]
+          : [{ role: 'close' }]),
+      ],
     },
     {
       role: 'help',
@@ -140,13 +140,15 @@ export function createMenu(): void {
         {
           label: 'Learn More',
           click: async (): Promise<void> => {
-            await (await import('electron')).shell.openExternal('https://electronjs.org')
-          }
-        }
-      ]
-    }
-  ]
+            await (
+              await import('electron')
+            ).shell.openExternal('https://electronjs.org');
+          },
+        },
+      ],
+    },
+  ];
 
-  const menu = Menu.buildFromTemplate(template)
-  Menu.setApplicationMenu(menu)
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
 }

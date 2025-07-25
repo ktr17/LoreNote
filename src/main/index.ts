@@ -11,7 +11,6 @@ let settingStore;
 let scrapsStore;
 let settingWindow: BrowserWindow | null = null;
 
-
 const isDev = import.meta.env.MODE === 'development';
 
 /**
@@ -41,7 +40,7 @@ async function getScrapsStore(): Promise<any> {
     scrapsStore = new Store({
       name: 'scraps',
       cwd: projectPath,
-    })
+    });
   }
   return scrapsStore;
 }
@@ -75,7 +74,8 @@ function createWindow(): BrowserWindow {
     } else if (targetIndex === currentScraps.length - 1) {
       newOrder = currentScraps[currentScraps.length - 1].order + 1.0;
     } else {
-      const before = currentScraps[Math.min(targetIndex, draggedIndex) - 1].order;
+      const before =
+        currentScraps[Math.min(targetIndex, draggedIndex) - 1].order;
       const after = currentScraps[Math.min(targetIndex, draggedIndex)].order;
       newOrder = (before + after) / 2.0;
     }
@@ -83,7 +83,7 @@ function createWindow(): BrowserWindow {
     return newOrder;
   }
 
-  mainWindow.on('ready-to-show', () => mainWindow.show())
+  mainWindow.on('ready-to-show', () => mainWindow.show());
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
@@ -96,9 +96,8 @@ function createWindow(): BrowserWindow {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
-  return mainWindow
+  return mainWindow;
 }
-
 
 /**
  * 設定画面を生成する
@@ -149,11 +148,16 @@ async function setupStore() {
 }
 
 // ファイルを開く
-async function openFile(): Promise<null | { filePath: string; textData: string }> {
+async function openFile(): Promise<null | {
+  filePath: string;
+  textData: string;
+}> {
   const win = BrowserWindow.getFocusedWindow();
   const result = await dialog.showOpenDialog(win, {
     properties: ['openFile'],
-    filters: [{ name: 'Documents', extensions: ['txt', 'html', 'md', 'js', 'ts'] }],
+    filters: [
+      { name: 'Documents', extensions: ['txt', 'html', 'md', 'js', 'ts'] },
+    ],
   });
 
   if (result.filePaths.length > 0) {
@@ -168,7 +172,7 @@ async function openFile(): Promise<null | { filePath: string; textData: string }
 async function saveFile(
   _event,
   currentPath: string,
-  textData: string
+  textData: string,
 ): Promise<{ filePath: string } | void> {
   let saveFilePath = currentPath;
 
@@ -176,7 +180,9 @@ async function saveFile(
     const win = BrowserWindow.getFocusedWindow();
     const result = await dialog.showSaveDialog(win, {
       properties: ['openFile'],
-      filters: [{ name: 'Documents', extensions: ['txt', 'html', 'md', 'js', 'ts'] }],
+      filters: [
+        { name: 'Documents', extensions: ['txt', 'html', 'md', 'js', 'ts'] },
+      ],
     });
     if (result.canceled) return;
     saveFilePath = result.filePath;
@@ -202,12 +208,12 @@ ipcMain.handle('open-dialog', async () => {
 
 // プロジェクト保存先のフォルダ選択ダイアログを開く
 ipcMain.handle('open-dialog-folder', async () => {
-  const { filePaths, canceled} = await dialog.showOpenDialog({
+  const { filePaths, canceled } = await dialog.showOpenDialog({
     title: 'フォルダの選択',
     buttonLabel: '選択',
     properties: ['openDirectory'], // フォルダ選択を有効にする
   });
-  console.log(filePaths)
+  console.log(filePaths);
 
   return {
     folderPath: canceled || filePaths.length === 0 ? null : filePaths[0],
@@ -228,14 +234,14 @@ ipcMain.handle('save-project-path', async (_event, folderPath) => {
 async function getProjectPath(): Promise<string | null> {
   const settingStore = await getSettingStore();
   return settingStore.get('projectPath', null);
-};
+}
 
 /**
  * ファイルの保存間隔を保存する
  */
 ipcMain.handle('save-interval-time', async (_event, intervalTime) => {
   const settingStore = await getSettingStore();
-  settingStore.set('saveIntervalTime', intervalTime)
+  settingStore.set('saveIntervalTime', intervalTime);
   return true;
 });
 
@@ -249,7 +255,6 @@ ipcMain.handle('get-interval-time', async () => {
   return intervalTime !== null ? Number(intervalTime) : null;
 });
 
-
 /**
  * プロジェクト配下のファイル一覧を取得する
  */
@@ -257,8 +262,7 @@ ipcMain.handle('get-file-list', async () => {
   const projectPath = await getProjectPath();
   const files = await fs.promises.readdir(projectPath);
   return files;
- }
-);
+});
 
 /**
  * ファイルのパス一覧を取得する
@@ -268,12 +272,11 @@ ipcMain.handle('get-all-file-paths', async () => {
   const files = await fs.promises.readdir(projectPath);
   const filePaths: string[] = [];
   // パスを作成する
-  for(const i in files) {
+  for (const i in files) {
     filePaths.push(projectPath + '/' + files[i]);
   }
   return filePaths;
- }
-);
+});
 
 /**
  * ファイルを読み込む
@@ -311,7 +314,6 @@ ipcMain.handle('rename', async (_event, oldPath: string, newPath: string) => {
   }
 });
 
-
 /**
  * メモの情報を管理用JSON(scraps.json)に保存する
  */
@@ -328,7 +330,9 @@ ipcMain.handle('save-scrap-json', async (_event, data) => {
   const currentScrapsRaw = scrapsStore.get('scraps', []);
   const currentScraps = Array.isArray(currentScrapsRaw) ? currentScrapsRaw : [];
 
-  const existingIndex = currentScraps.findIndex(scrap => scrap.id === data.id);
+  const existingIndex = currentScraps.findIndex(
+    (scrap) => scrap.id === data.id,
+  );
 
   if (existingIndex !== -1) {
     // 更新：同じ ID の scrap があれば上書き
@@ -363,14 +367,14 @@ ipcMain.handle('update-scrap-order', async (_event, scraps: any[]) => {
 
   // order を再計算
   const reorderedScraps = scraps.map((updatedScrap, index) => {
-    const original = currentScraps.find((s) => s.id === updatedScrap.id)
+    const original = currentScraps.find((s) => s.id === updatedScrap.id);
     return {
       // ...original,
       // ...updatedScrap,
       id: updatedScrap.id,
       title: updatedScrap.title,
       type: updatedScrap.type ?? original?.type ?? 'text',
-      order: index + 1.0 // 必要なら calculateNewOrder で精密な order を
+      order: index + 1.0, // 必要なら calculateNewOrder で精密な order を
     };
   });
 
@@ -381,26 +385,31 @@ ipcMain.handle('update-scrap-order', async (_event, scraps: any[]) => {
 /**
  * タイトルを更新する
  */
-ipcMain.handle('update-scrap-title', async (_event, id: string, newTitle: string) => {
-  await setupStore();
-  const settingStore = await getSettingStore();
-  const projectPath = await settingStore.get('projectPath', null);
+ipcMain.handle(
+  'update-scrap-title',
+  async (_event, id: string, newTitle: string) => {
+    await setupStore();
+    const settingStore = await getSettingStore();
+    const projectPath = await settingStore.get('projectPath', null);
 
-  const scrapsStore = new Store({
-    name: 'scraps',
-    cwd: projectPath,
-  });
+    const scrapsStore = new Store({
+      name: 'scraps',
+      cwd: projectPath,
+    });
 
-  const currentScrapsRaw = scrapsStore.get('scraps', []);
-  const currentScraps = Array.isArray(currentScrapsRaw) ? currentScrapsRaw : [];
+    const currentScrapsRaw = scrapsStore.get('scraps', []);
+    const currentScraps = Array.isArray(currentScrapsRaw)
+      ? currentScrapsRaw
+      : [];
 
-  const updatedScraps = currentScraps.map((scrap) =>
-    scrap.id === id ? { ...scrap, title: newTitle } : scrap
-  );
+    const updatedScraps = currentScraps.map((scrap) =>
+      scrap.id === id ? { ...scrap, title: newTitle } : scrap,
+    );
 
-  scrapsStore.set('scraps', updatedScraps);
-  return true;
-});
+    scrapsStore.set('scraps', updatedScraps);
+    return true;
+  },
+);
 
 /**
  * scraps.jsonから各要素のデータを取得する
@@ -415,7 +424,7 @@ ipcMain.handle('load-scraps-from-json', async () => {
     cwd: projectPath,
   });
   return scrapsStore.get('scraps', null);
-})
+});
 
 // ファイル操作 IPC
 ipcMain.handle('open-file', openFile);
@@ -442,14 +451,14 @@ async function main() {
 
   // プロジェクトパスが空欄の場合は、設定画面を表示する
   if (!projectPath) {
-    openSettingsWindow(mainWindow)
+    openSettingsWindow(mainWindow);
   }
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  })
+  });
 }
 
-main()
+main();
 
 // mac以外では全ウィンドウを閉じたらアプリ終了
 app.on('window-all-closed', () => {

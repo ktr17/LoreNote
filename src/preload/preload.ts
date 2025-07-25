@@ -32,7 +32,10 @@ const api = {
      * @param textData 保存する文字列データ
      * @returns 保存先のファイルパス、または何も返さない（上書き時など）
      */
-    async save(currentPath: string, textData: string): Promise<{ filePath: string } | void> {
+    async save(
+      currentPath: string,
+      textData: string,
+    ): Promise<{ filePath: string } | void> {
       return await ipcRenderer.invoke('save-file', currentPath, textData);
     },
 
@@ -134,7 +137,7 @@ const api = {
      */
     async getPath(): Promise<string | null> {
       return await ipcRenderer.invoke('get-project-path');
-    }
+    },
   },
 
   dialog: {
@@ -152,8 +155,8 @@ const api = {
      */
     async openFolder(): Promise<{ folderPath: string; canceld: boolean }> {
       return await ipcRenderer.invoke('open-dialog-folder');
-    }
-  }
+    },
+  },
 };
 
 // グローバルな `api` 名前空間として、各種機能をレンダラープロセスに公開

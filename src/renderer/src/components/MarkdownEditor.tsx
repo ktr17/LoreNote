@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react'
+import React, { useMemo } from 'react';
 
 // Markdownエディタ用のモジュール
-import SimpleMde from 'react-simplemde-editor'
-import 'easymde/dist/easymde.min.css'
-import type { Options } from 'easymde'
+import SimpleMde from 'react-simplemde-editor';
+import 'easymde/dist/easymde.min.css';
+import type { Options } from 'easymde';
 
 interface MarkdownEditorProps {
   value: string;
@@ -14,7 +14,7 @@ interface MarkdownEditorProps {
 export const MarkdownEditor = ({
   value,
   onChange,
-  placeholder = 'ここに内容を入力してください'
+  placeholder = 'ここに内容を入力してください',
 }: MarkdownEditorProps): JSX.Element => {
   const editorOptions = useMemo(() => {
     return {
@@ -23,18 +23,22 @@ export const MarkdownEditor = ({
       placeholder: placeholder,
       status: false,
       toolbar: false,
-    } as Options
-  }, [placeholder])
+    } as Options;
+  }, [placeholder]);
 
   const handleChange = (value: string): void => {
-    onChange(value)
-  }
+    onChange(value);
+  };
 
   return (
     <div className="markdown-editor">
-      <SimpleMde value={value} onChange={handleChange} options={editorOptions} />
+      <SimpleMde
+        value={value}
+        onChange={handleChange}
+        options={editorOptions}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default MarkdownEditor
+export default MarkdownEditor;
