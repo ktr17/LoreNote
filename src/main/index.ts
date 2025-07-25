@@ -418,11 +418,15 @@ ipcMain.handle('load-scraps-from-json', async () => {
   // await setupStore();
   const settingStore = await getSettingStore();
   const projectPath = await settingStore.get('projectPath', null);
-
+  if (!projectPath) {
+    console.warn('Project path is not set');
+    return null;
+  }
   const scrapsStore = new Store({
     name: 'scraps',
     cwd: projectPath,
   });
+
   return scrapsStore.get('scraps', null);
 });
 

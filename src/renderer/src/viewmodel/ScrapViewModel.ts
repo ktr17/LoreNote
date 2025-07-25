@@ -31,7 +31,6 @@ export const useScrapViewModel = (): {
     const loadScraps = async () => {
       try {
         const jsonScraps = await window.api.scrap.loadJson();
-
         const loadedScraps = await Promise.all(
           jsonScraps.map(async (item: any) => {
             const fileName = `${item.title}.md`;

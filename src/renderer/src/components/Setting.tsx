@@ -49,6 +49,14 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
     }
   };
 
+  const checkProjectPath = () => {
+    if (!projectPath) {
+      alert('プロジェクトパスが空です。\nプロジェクトパスを入力してください。');
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div
       style={{
@@ -199,7 +207,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             }}
           >
             <button
-              onClick={onClose}
+              onClick={checkProjectPath}
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#3a3a3a',
