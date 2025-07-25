@@ -28,17 +28,17 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
     loadIntervalTime();
   }, []);
 
-
   const handleApply = async (): Promise<void> => {
     const resultSavePath: any = await window.api.project.savePath(projectPath);
-    const resultSaveInterval: any = await window.api.project.saveInterval(saveInterval);
+    const resultSaveInterval: any =
+      await window.api.project.saveInterval(saveInterval);
     if (resultSavePath || resultSaveInterval) {
       // ファイル保存処理
       alert('保存しました。');
       console.log('保存しました');
     } else {
-      alert('保存に失敗しました')
-      console.log('保存失敗')
+      alert('保存に失敗しました');
+      console.log('保存失敗');
     }
   };
 
@@ -46,6 +46,14 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
     const folder: any = await window.api.dialog.openFolder();
     if (!folder.canceled && folder.folderPath) {
       setProjectPath(folder.folderPath);
+    }
+  };
+
+  const checkProjectPath = () => {
+    if (!projectPath) {
+      alert('プロジェクトパスが空です。\nプロジェクトパスを入力してください。');
+    } else {
+      onClose();
     }
   };
 
@@ -62,7 +70,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
         backgroundColor: '#1e1e1e',
         color: '#fff',
         fontFamily: 'Segoe UI, sans-serif',
-        zIndex: 1000
+        zIndex: 1000,
       }}
     >
       <div
@@ -72,7 +80,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
           backgroundColor: '#2c2c2c',
           borderRadius: '10px',
           overflow: 'hidden',
-          boxShadow: '0 0 20px rgba(0,0,0,0.4)'
+          boxShadow: '0 0 20px rgba(0,0,0,0.4)',
         }}
       >
         {/* Sidebar */}
@@ -84,8 +92,18 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             borderRight: '1px solid #444',
           }}
         >
-          <h2 style={{ fontSize: '16px', marginBottom: '20px', color: '#ccc' }}>設定</h2>
-          <div style={{ ...menuItemStyle, backgroundColor: '#3a3a3a', color: '#fff' }}>⚙️ 一般</div>
+          <h2 style={{ fontSize: '16px', marginBottom: '20px', color: '#ccc' }}>
+            設定
+          </h2>
+          <div
+            style={{
+              ...menuItemStyle,
+              backgroundColor: '#3a3a3a',
+              color: '#fff',
+            }}
+          >
+            ⚙️ 一般
+          </div>
         </div>
 
         {/* Content */}
@@ -93,7 +111,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
           style={{
             flex: 1,
             padding: '30px',
-            overflowY: 'auto'
+            overflowY: 'auto',
           }}
         >
           <h3
@@ -108,7 +126,9 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
           >
             プロジェクト設定
           </h3>
-          <div style={{ ...settingItem, display: 'flex', alignItems: 'center' }}>
+          <div
+            style={{ ...settingItem, display: 'flex', alignItems: 'center' }}
+          >
             <label style={{ marginRight: '10px' }}>格納先</label>
             <input
               type="text"
@@ -155,8 +175,12 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             保存設定
           </h3>
           {/* 保存間隔の入力フィールド */}
-          <div style={{ ...settingItem, display: 'flex', alignItems: 'center' }}>
-            <label style={{ marginRight: '10px', whiteSpace: 'nowrap' }}>保存間隔</label>
+          <div
+            style={{ ...settingItem, display: 'flex', alignItems: 'center' }}
+          >
+            <label style={{ marginRight: '10px', whiteSpace: 'nowrap' }}>
+              保存間隔
+            </label>
             <input
               type="number"
               min={1}
@@ -169,16 +193,21 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
                 border: '1px solid #555',
                 borderRadius: '5px',
                 color: '#fff',
-                marginRight: '8px'
+                marginRight: '8px',
               }}
             />
             <span>秒</span>
           </div>
           <div
-            style={{ marginTop: '40px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}
+            style={{
+              marginTop: '40px',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '10px',
+            }}
           >
             <button
-              onClick={onClose}
+              onClick={checkProjectPath}
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#3a3a3a',

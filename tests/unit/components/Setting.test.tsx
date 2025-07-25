@@ -14,8 +14,10 @@ describe('Setting Component', () => {
         saveInterval: vi.fn().mockResolvedValue(true),
       },
       dialog: {
-        openFolder: vi.fn().mockResolvedValue({ canceled: false, folderPath: '/new/path' }),
-      }
+        openFolder: vi
+          .fn()
+          .mockResolvedValue({ canceled: false, folderPath: '/new/path' }),
+      },
     };
   });
 

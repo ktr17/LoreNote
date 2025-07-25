@@ -31,12 +31,13 @@ export const useScrapViewModel = (): {
     const loadScraps = async () => {
       try {
         const jsonScraps = await window.api.scrap.loadJson();
-
         const loadedScraps = await Promise.all(
           jsonScraps.map(async (item: any) => {
             const fileName = `${item.title}.md`;
             const filePath = await window.api.project.getPath();
-            const content = await window.api.file.read(filePath + '/' + fileName);
+            const content = await window.api.file.read(
+              filePath + '/' + fileName,
+            );
             const title = item.title;
 
             return new ScrapModel({
@@ -44,9 +45,9 @@ export const useScrapViewModel = (): {
               title,
               order: item.order,
               content,
-              type: item.type
+              type: item.type,
             });
-          })
+          }),
         );
 
         loadedScraps.sort((a, b) => a.getOrder() - b.getOrder());
@@ -71,15 +72,20 @@ export const useScrapViewModel = (): {
     const newScrap = new ScrapModel({
       content: '# 新しいメモ\n\nここに内容を入力してください。',
       title: 'New Title ' + scraps.length,
-      order: newOrder
+      order: newOrder,
     });
 
     setScraps([...scraps, newScrap]);
     setSelectedScrapId(newScrap.id);
 
-    const scrapData = generateScrap(newScrap.id, newScrap.title, 'file', newOrder);
+    const scrapData = generateScrap(
+      newScrap.id,
+      newScrap.title,
+      'file',
+      newOrder,
+    );
     // 内容を md ファイルとして保存
-    window.api.project.getPath().then(projectPath => {
+    window.api.project.getPath().then((projectPath) => {
       const filePath = `${projectPath}/${newScrap.title}.md`;
       const result = window.api.file.save(filePath, newScrap.content);
     });
@@ -92,23 +98,24 @@ export const useScrapViewModel = (): {
   /**
    * メモ内容の更新
    */
-  const updateScrapContent = useCallback(async (id: number, newContent: string) => {
+  const updateScrapContent = useCallback(
+    async (id: number, newContent: string) => {
       // 更新対象 scrap をこの時点で取得（クロージャから分離）
-      const scrapToSave = scraps.find(scrap => scrap.id === id);
+      const scrapToSave = scraps.find((scrap) => scrap.id === id);
       if (!scrapToSave) return;
 
-      setScraps(prev =>
-        prev.map(scrap =>
+      setScraps((prev) =>
+        prev.map((scrap) =>
           scrap.id === id
             ? new ScrapModel({
                 content: newContent,
                 title: scrap.getTitle(),
                 order: scrap.getOrder(),
                 id: scrap.id,
-                type: scrap.type
+                type: scrap.type,
               })
-            : scrap
-        )
+            : scrap,
+        ),
       );
 
       // タイマーがすでにあればキャンセル
@@ -130,45 +137,46 @@ export const useScrapViewModel = (): {
           id,
           scrapToSave.getTitle(),
           scrapToSave.type,
-          scrapToSave.getOrder()
-        )
+          scrapToSave.getOrder(),
+        );
         window.api.scrap.saveJson(scrapData);
       }, timeInterval);
     },
-    [scraps]
+    [scraps],
   );
 
   /**
    * メモタイトルの更新
    */
-  const updateScrapTitle = useCallback(async (id: number, newTitle: string) => {
-      const scrap = scraps.find((s) => s.id === id)
-      if (!scrap) return
+  const updateScrapTitle = useCallback(
+    async (id: number, newTitle: string) => {
+      const scrap = scraps.find((s) => s.id === id);
+      if (!scrap) return;
 
       let finalTitle = newTitle;
       if (finalTitle == '') {
         // 仮タイトルを生成（例: Untitled 1, Untitled 2…）
-        const base = 'Untitled'
-        let counter = 1
-        const existingTitles = scraps.map((s) => s.getTitle())
+        const base = 'Untitled';
+        let counter = 1;
+        const existingTitles = scraps.map((s) => s.getTitle());
         while (existingTitles.includes(`${base} ${counter}`)) {
-          counter++
+          counter++;
         }
-        finalTitle = `${base} ${counter}`
+        finalTitle = `${base} ${counter}`;
       }
       // 古いファイルをリネーム
-      const oldFileName = scrap.getTitle() + '.md'
-      const newFileName = finalTitle + '.md'
+      const oldFileName = scrap.getTitle() + '.md';
+      const newFileName = finalTitle + '.md';
       const projectPath = await window.api.project.getPath();
 
       if (oldFileName !== newFileName) {
         try {
           await window.api.file.rename(
             `${projectPath}/${oldFileName}`,
-            `${projectPath}/${newFileName}`
-          )
+            `${projectPath}/${newFileName}`,
+          );
         } catch (err) {
-          console.log('ファイルのリネームに失敗:', err)
+          console.log('ファイルのリネームに失敗:', err);
         }
       }
 
@@ -177,53 +185,63 @@ export const useScrapViewModel = (): {
         title: finalTitle,
         order: scrap.getOrder(),
         id: scrap.id,
-        type: scrap.type
+        type: scrap.type,
       });
 
-      const scrapData = generateScrap(scrap.id, scrap.file, scrap.type, scrap.getOrder());
+      const scrapData = generateScrap(
+        scrap.id,
+        scrap.file,
+        scrap.type,
+        scrap.getOrder(),
+      );
       scrapData.title = finalTitle;
       window.api.scrap.saveJson(scrapData);
 
-      setScraps((prevScraps) => prevScraps.map((s) => (s.id === id ? updatedScrap : s)))
+      setScraps((prevScraps) =>
+        prevScraps.map((s) => (s.id === id ? updatedScrap : s)),
+      );
     },
-    [scraps]
-  )
+    [scraps],
+  );
 
   /**
    * メモの並び替え
    */
-  const reorderScraps = useCallback((sourceIndex: number, destinationIndex: number) => {
-    if (sourceIndex === destinationIndex) return;
+  const reorderScraps = useCallback(
+    (sourceIndex: number, destinationIndex: number) => {
+      if (sourceIndex === destinationIndex) return;
 
-    setScraps(prevScraps => {
-      const result = [...prevScraps];
-      const [moved] = result.splice(sourceIndex, 1);
-      result.splice(destinationIndex, 0, moved);
+      setScraps((prevScraps) => {
+        const result = [...prevScraps];
+        const [moved] = result.splice(sourceIndex, 1);
+        result.splice(destinationIndex, 0, moved);
 
-      const newScraps = result.map((scrap, index) => {
-        let newOrder = 0;
-        if (index === 0) {
-          newOrder = result[1]?.getOrder() ? result[1].getOrder() / 2 : 1.0;
-        } else if (index === result.length - 1) {
-          newOrder = result[index - 1].getOrder() + 1.0;
-        } else {
-          const prevOrder = result[index - 1].getOrder();
-          const nextOrder = result[index + 1].getOrder();
-          newOrder = (prevOrder + nextOrder) / 2;
-        }
+        const newScraps = result.map((scrap, index) => {
+          let newOrder = 0;
+          if (index === 0) {
+            newOrder = result[1]?.getOrder() ? result[1].getOrder() / 2 : 1.0;
+          } else if (index === result.length - 1) {
+            newOrder = result[index - 1].getOrder() + 1.0;
+          } else {
+            const prevOrder = result[index - 1].getOrder();
+            const nextOrder = result[index + 1].getOrder();
+            newOrder = (prevOrder + nextOrder) / 2;
+          }
 
-        return new ScrapModel({
-          content: scrap.getContent(),
-          title: scrap.getTitle(),
-          order: newOrder,
-          id: scrap.id,
-          type: scrap.type
+          return new ScrapModel({
+            content: scrap.getContent(),
+            title: scrap.getTitle(),
+            order: newOrder,
+            id: scrap.id,
+            type: scrap.type,
+          });
         });
-      });
 
-      return newScraps;
-    });
-  }, []);
+        return newScraps;
+      });
+    },
+    [],
+  );
 
   /**
    * メモの削除
@@ -231,9 +249,9 @@ export const useScrapViewModel = (): {
   const deleteScrap = useCallback(
     (id: number) => {
       setScraps((prevScraps) => {
-        const filtered = prevScraps.filter((scrap) => scrap.id !== id)
+        const filtered = prevScraps.filter((scrap) => scrap.id !== id);
         if (filtered.length > 0 && id === selectedScrapId) {
-          setSelectedScrapId(filtered[0].id)
+          setSelectedScrapId(filtered[0].id);
         }
         return filtered.map(
           (scrap, index) =>
@@ -242,19 +260,19 @@ export const useScrapViewModel = (): {
               title: scrap.getTitle(),
               order: index,
               id: scrap.id,
-              type: scrap.type
-            })
-        )
-      })
+              type: scrap.type,
+            }),
+        );
+      });
     },
-    [selectedScrapId]
-  )
+    [selectedScrapId],
+  );
 
   /**
    * 選択中のメモを取得
    */
   const getSelectedScrap = useCallback(() => {
-    return scraps.find(scrap => scrap.id === selectedScrapId) || null;
+    return scraps.find((scrap) => scrap.id === selectedScrapId) || null;
   }, [scraps, selectedScrapId]);
 
   /**
@@ -280,25 +298,29 @@ export const useScrapViewModel = (): {
    */
   const addScrapFromFile = useCallback(async (filePaths: string[]) => {
     try {
-      const newScraps = await Promise.all(filePaths.map(async (filePath) => {
-        const content = await window.api.file.read(filePath);
-        const title = extractTitleFromContent(content) || '読み込みメモ';
-        return { content, title };
-      }));
+      const newScraps = await Promise.all(
+        filePaths.map(async (filePath) => {
+          const content = await window.api.file.read(filePath);
+          const title = extractTitleFromContent(content) || '読み込みメモ';
+          return { content, title };
+        }),
+      );
 
-      setScraps(prev => {
-        const maxId = prev.length > 0 ? Math.max(...prev.map(s => s.id)) : 0;
+      setScraps((prev) => {
+        const maxId = prev.length > 0 ? Math.max(...prev.map((s) => s.id)) : 0;
         const updatedScraps = [...prev];
 
         newScraps.forEach((scrapData, index) => {
           const newId = maxId + index + 1;
           const newOrder = updatedScraps.length;
-          updatedScraps.push(new ScrapModel(
-            newId,
-            scrapData.content,
-            scrapData.title + ' ' + newId,
-            newOrder
-          ));
+          updatedScraps.push(
+            new ScrapModel(
+              newId,
+              scrapData.content,
+              scrapData.title + ' ' + newId,
+              newOrder,
+            ),
+          );
           setSelectedScrapId(newId);
         });
 
@@ -340,7 +362,7 @@ export const useScrapViewModel = (): {
     deleteScrap,
     getSelectedScrap,
     addScrapFromFile,
-    openProjectFiles
+    openProjectFiles,
   };
 };
 
