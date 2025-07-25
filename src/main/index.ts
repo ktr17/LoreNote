@@ -9,6 +9,10 @@ import icon from '../../resources/icon.png?asset';
 let Store: any;
 let settingStore;
 let scrapsStore;
+let settingWindow: BrowserWindow | null = null;
+
+
+const isDev = import.meta.env.MODE === 'development';
 
 /**
  * ホームディレクトリに存在するsetting.jsonを管理するためのstoreを返却する
@@ -42,8 +46,11 @@ async function getScrapsStore(): Promise<any> {
   return scrapsStore;
 }
 
-// ウィンドウを作成
-function createWindow(): void {
+/**
+ * メイン画面を生成する
+ * @return mainWindow
+ */
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -88,6 +95,49 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
+
+  return mainWindow
+}
+
+
+/**
+ * 設定画面を生成する
+ * @param parentWindow 親Window
+ */
+function openSettingsWindow(parentWindow: BrowserWindow): void {
+  settingWindow = new BrowserWindow({
+    parent: parentWindow,
+    width: 600,
+    height: 400,
+    modal: true,
+    show: false, // ← ready-to-show を使うので false にしておく
+    resizable: false,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+
+  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+    // 開発環境用（Vite dev server を使ってる場合）
+    settingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#/setting`);
+  } else {
+    // 本番用（ビルド後）
+    settingWindow.loadFile(path.join(__dirname, '../renderer/index.html'), {
+      hash: 'setting',
+    });
+  }
+
+  settingWindow.once('ready-to-show', () => {
+    settingWindow?.show();
+  });
+
+  settingWindow.on('closed', () => {
+    settingWindow = null;
+  });
 }
 
 // electron-store を初期化
@@ -384,14 +434,22 @@ async function main() {
   });
 
   createMenu();
-  createWindow();
+  // ここで、設定ファイルを読み込んでアプリを表示する
+  const projectPath = await getProjectPath();
 
+  // プロジェクトパスが空欄の場合、Markdownファイルを格納するパスの設定が必要なので、設定画面を開く
+  const mainWindow = createWindow();
+
+  // プロジェクトパスが空欄の場合は、設定画面を表示する
+  if (!projectPath) {
+    openSettingsWindow(mainWindow)
+  }
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+  })
 }
 
-main();
+main()
 
 // mac以外では全ウィンドウを閉じたらアプリ終了
 app.on('window-all-closed', () => {

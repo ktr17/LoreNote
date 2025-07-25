@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           element={
             <Setting
               onClose={() => {
-                console.log('閉じます')
+                window.close()
               }}
             />
           }

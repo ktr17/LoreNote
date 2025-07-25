@@ -9,7 +9,6 @@ import { useLocation } from 'react-router-dom';
 function App(): JSX.Element {
   const location = useLocation();
   const [showSetting, setShowSetting] = useState(location.hash === '#setting');
-  console.log('App component rendered');
 
   const {
     scraps,
