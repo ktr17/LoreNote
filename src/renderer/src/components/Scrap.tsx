@@ -3,6 +3,8 @@ import debounce from 'lodash.debounce';
 import MDEditor from './MarkdownEditor';
 import Button from './Button';
 import ScrapModel from '../model/ScrapModel';
+import DropdownMenu from './DropdownMenu';
+import ConfirmDialog from './ConfirmDialog';
 
 interface ScrapProps {
   scrap: ScrapModel;
@@ -38,6 +40,7 @@ const Scrap = ({
 }: ScrapProps): JSX.Element => {
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
+  const [showConfirm, setShowConfirm] = useState(false);
   const scrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,7 +100,14 @@ const Scrap = ({
     onTitleChange(scrap.id, newTitle);
   };
 
-  const handleDelete = (): void => onDelete(scrap.id);
+  const handleDelete = (): void => {
+    setShowConfirm(true);
+  };
+  const deleteScrap = (): void => {
+    onDelete(scrap.id);
+    setShowConfirm(false);
+  };
+
   const handleClick = (): void => onSelect(scrap.id);
 
   const handleDragStart = (e: React.DragEvent): void => {
@@ -148,9 +158,17 @@ const Scrap = ({
           className="scrap-title-input"
         />
         <div className="scrap-actions">
-          <Button onClick={handleDelete} variant="danger" size="small">
-            削除
-          </Button>
+          <DropdownMenu onDelete={handleDelete}></DropdownMenu>
+          {showConfirm && (
+            <ConfirmDialog
+              message="このメモを削除しますか？"
+              onClose={() => {}}
+              open={showConfirm}
+              onConfirm={deleteScrap}
+              onCancel={() => setShowConfirm(false)}
+              buttonText="削除する"
+            />
+          )}
         </div>
       </div>
       <div className="scrap-editor">
