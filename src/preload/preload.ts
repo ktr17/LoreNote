@@ -56,6 +56,14 @@ const api = {
     async rename(oldPath: string, newPath: string): Promise<boolean> {
       return await ipcRenderer.invoke('rename', oldPath, newPath);
     },
+    /**
+     * ファイルを削除します。
+     * @param filePath 削除対象のファイル名を含む絶対パス
+     * @returns ファイル削除に成功すればtrue、失敗すればfalse
+     */
+    async delete(filePath: string): Promise<boolean> {
+      return await ipcRenderer.invoke('delete', filepath);
+    },
   },
 
   scrap: {
