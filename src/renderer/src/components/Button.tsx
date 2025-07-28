@@ -29,6 +29,10 @@ const Button: React.FC<ButtonProps> = ({
     secondary:
       'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500',
     danger: 'bg-red-500 text-white hover:bg-red-700 focus:ring-red-500',
+    additionalMemo:
+      'flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 transition rounded-xl px-4 py-2 text-sm font-medium shadow-sm',
+    deleteMemo:
+      'flex items-center gap-1 text-red-500 hover:text-white border border-red-300 hover:bg-red-400 transition rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm',
   };
 
   // サイズに基づくスタイル(Lookup Table)
@@ -50,7 +54,7 @@ const Button: React.FC<ButtonProps> = ({
   const buttonStyle = `${baseStyle} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${disabledStyle} ${className}`;
 
   return (
-    <button className={buttonStyle} onClick={onClick} type="button">
+    <button className={variantStyles[variant]} onClick={onClick} type="button">
       {children}
     </button>
   );

@@ -1,3 +1,4 @@
+import { defineConfig } from 'vitest/config';
 import { Menu, MenuItemConstructorOptions, BrowserWindow } from 'electron';
 import * as path from 'path';
 
