@@ -62,7 +62,7 @@ const api = {
      * @returns ファイル削除に成功すればtrue、失敗すればfalse
      */
     async delete(filePath: string): Promise<boolean> {
-      return await ipcRenderer.invoke('delete', filepath);
+      return await ipcRenderer.invoke('delete', filePath);
     },
   },
 

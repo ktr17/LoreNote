@@ -315,6 +315,18 @@ ipcMain.handle('rename', async (_event, oldPath: string, newPath: string) => {
 });
 
 /**
+ * ファイルを削除する
+ */
+ipcMain.handle('delete', async (_event, filePath: string) => {
+  try {
+    await fs.promises.unlink(filePath);
+    return true;
+  } catch (error) {
+    console.error('ファイル削除失敗:', error);
+    return false;
+  }
+});
+/**
  * メモの情報を管理用JSON(scraps.json)に保存する
  */
 ipcMain.handle('save-scrap-json', async (_event, data) => {
