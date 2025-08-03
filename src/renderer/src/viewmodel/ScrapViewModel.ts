@@ -247,8 +247,17 @@ export const useScrapViewModel = (): {
    * メモの削除
    */
   const deleteScrap = useCallback(
-    (id: number) => {
+    async (id: number) => {
+      const projectPath = await window.api.project.getPath();
       setScraps((prevScraps) => {
+        const scrapToDelete = prevScraps.find((s) => s.id === id);
+        if (scrapToDelete) {
+          // プロジェクトパスからファイル削除
+          scrapToDelete.deleteFile(projectPath);
+          // scraps.jsonからメモ情報を削除
+          window.api.scrap.deleteScrap(id);
+        }
+
         const filtered = prevScraps.filter((scrap) => scrap.id !== id);
         if (filtered.length > 0 && id === selectedScrapId) {
           setSelectedScrapId(filtered[0].id);

@@ -62,6 +62,13 @@ class ScrapModel {
   setOrder(order: number): void {
     this.order = order;
   }
+  /**
+   * Markdownファイルを削除する
+   */
+  async deleteFile(projectPath: string): Promise<void> {
+    const filePath = `${projectPath}/${this.title}.md`;
+    await window.api.file.delete(filePath);
+  }
 }
 
 export default ScrapModel;

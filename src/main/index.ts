@@ -315,6 +315,18 @@ ipcMain.handle('rename', async (_event, oldPath: string, newPath: string) => {
 });
 
 /**
+ * ファイルを削除する
+ */
+ipcMain.handle('delete', async (_event, filePath: string) => {
+  try {
+    await fs.promises.unlink(filePath);
+    return true;
+  } catch (error) {
+    console.error('ファイル削除失敗:', error);
+    return false;
+  }
+});
+/**
  * メモの情報を管理用JSON(scraps.json)に保存する
  */
 ipcMain.handle('save-scrap-json', async (_event, data) => {
@@ -428,6 +440,28 @@ ipcMain.handle('load-scraps-from-json', async () => {
   });
 
   return scrapsStore.get('scraps', null);
+});
+
+/**
+ * scraps.jsonから指定したデータを削除する
+ */
+ipcMain.handle('delete-scrap', async (_event, targetId) => {
+  const settingStore = await getSettingStore();
+  const projectPath = await settingStore.get('projectPath', null);
+  if (!projectPath) {
+    console.warn('Project path is not set');
+    return null;
+  }
+  const scrapsStore = new Store({
+    name: 'scraps',
+    cwd: projectPath,
+  });
+  // 既存の scraps を取得
+  const scraps = scrapsStore.get('scraps', []) as any[];
+
+  // IDが一致しないものだけ残す
+  const updatedScraps = scraps.filter((scrap) => scrap.id !== targetId);
+  return scrapsStore.set('scraps', updatedScraps);
 });
 
 // ファイル操作 IPC
