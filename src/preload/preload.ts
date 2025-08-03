@@ -110,6 +110,14 @@ const api = {
     async getTitle(id: string): Promise<string> {
       return await ipcRenderer.invoke('get-title', id);
     },
+    /**
+     * scraps.jsonからメモを削除します。
+     * @params id
+     * @return 削除が成功 true、失敗 false
+     */
+    async deleteScrap(id: string): Promise<boolean> {
+      return await ipcRenderer.invoke('delete-scrap', id);
+    },
   },
 
   project: {
