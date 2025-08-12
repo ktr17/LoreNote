@@ -216,26 +216,17 @@ export const useScrapViewModel = (): {
         const [moved] = result.splice(sourceIndex, 1);
         result.splice(destinationIndex, 0, moved);
 
-        const newScraps = result.map((scrap, index) => {
-          let newOrder = 0;
-          if (index === 0) {
-            newOrder = result[1]?.getOrder() ? result[1].getOrder() / 2 : 1.0;
-          } else if (index === result.length - 1) {
-            newOrder = result[index - 1].getOrder() + 1.0;
-          } else {
-            const prevOrder = result[index - 1].getOrder();
-            const nextOrder = result[index + 1].getOrder();
-            newOrder = (prevOrder + nextOrder) / 2;
-          }
-
-          return new ScrapModel({
-            content: scrap.getContent(),
-            title: scrap.getTitle(),
-            order: newOrder,
-            id: scrap.id,
-            type: scrap.type,
-          });
-        });
+        // 並べ替え後に index を order として振り直す
+        const newScraps = result.map(
+          (scrap, index) =>
+            new ScrapModel({
+              content: scrap.getContent(),
+              title: scrap.getTitle(),
+              order: index,
+              id: scrap.id,
+              type: scrap.type,
+            }),
+        );
 
         return newScraps;
       });
