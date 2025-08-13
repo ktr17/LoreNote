@@ -41,8 +41,15 @@ export function createMenu(): void {
                   if (isDev) {
                     settingWindow.loadURL('http://localhost:5173/#setting');
                   } else {
-                    settingWindow.loadFile('../renderer/index.html', {
-                      hash: 'setting',
+                    settingWindow.loadFile(
+                      path.join(__dirname, '../renderer/index.html/'),
+                    );
+
+                    // ロード完了後にブラウザ内でハッシュを設定
+                    settingWindow.webContents.once('did-finish-load', () => {
+                      settingWindow.webContents.executeJavaScript(
+                        `window.location.hash = '#setting';`,
+                      );
                     });
                   }
 
