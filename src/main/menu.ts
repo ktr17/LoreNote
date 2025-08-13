@@ -15,10 +15,10 @@ export function createMenu(): void {
           {
             label: 'LoreNote',
             submenu: [
-              { role: 'about' },
+              { label: 'LoreNoteについて', role: 'about' },
               { type: 'separator' },
               {
-                label: 'setting',
+                label: '設定',
                 click: async (): Promise<void> => {
                   if (settingWindow) {
                     settingWindow.focus();
@@ -41,8 +41,15 @@ export function createMenu(): void {
                   if (isDev) {
                     settingWindow.loadURL('http://localhost:5173/#setting');
                   } else {
-                    settingWindow.loadFile('../renderer/index.html', {
-                      hash: 'setting',
+                    settingWindow.loadFile(
+                      path.join(__dirname, '../renderer/index.html/'),
+                    );
+
+                    // ロード完了後にブラウザ内でハッシュを設定
+                    settingWindow.webContents.once('did-finish-load', () => {
+                      settingWindow.webContents.executeJavaScript(
+                        `window.location.hash = '#setting';`,
+                      );
                     });
                   }
 
@@ -56,98 +63,99 @@ export function createMenu(): void {
                   });
                 },
               },
-              { type: 'separator' },
-              { role: 'services' },
-              { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideOthers' },
-              { role: 'unhide' },
-              { type: 'separator' },
-              { role: 'quit' },
+              // { type: 'separator' },
+              // { role: 'services' },
+              // { type: 'separator' },
+              // { role: 'hide' },
+              // { role: 'hideOthers' },
+              // { role: 'unhide' },
+              // { type: 'separator' },
+              // { role: 'quit' },
             ],
           },
         ]
       : []),
     // { role: 'fileMenu' }
-    {
-      label: 'ファイル',
-      submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
-    },
+    // {
+    //   label: 'ファイル',
+    //   submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
+    // },
     // { role: 'editMenu' }
-    {
-      label: '編集',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        ...(isMac
-          ? [
-              { role: 'pasteAndMatchStyle' },
-              { role: 'delete' },
-              { role: 'selectAll' },
-              { type: 'separator' },
-              {
-                label: 'Speech',
-                submenu: [
-                  {
-                    role: 'startSpeaking',
-                  },
-                  {
-                    role: 'stopSpeaking',
-                  },
-                ],
-              },
-            ]
-          : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
-      ],
-    },
+    // {
+    //   label: '編集',
+    //   submenu: [
+    //     { role: 'undo' },
+    //     { role: 'redo' },
+    //     { type: 'separator' },
+    //     { role: 'cut' },
+    //     { role: 'copy' },
+    //     { role: 'paste' },
+    //     ...(isMac
+    //       ? [
+    //           { role: 'pasteAndMatchStyle' },
+    //           { role: 'delete' },
+    //           { role: 'selectAll' },
+    //           { type: 'separator' },
+    //           {
+    //             label: 'Speech',
+    //             submenu: [
+    //               {
+    //                 role: 'startSpeaking',
+    //               },
+    //               {
+    //                 role: 'stopSpeaking',
+    //               },
+    //             ],
+    //           },
+    //         ]
+    //       : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+    //   ],
+    // },
     // { role: 'viewMenu' }
-    {
-      label: '表示',
-      submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-      ],
-    },
+    // {
+    //   label: '表示',
+    //   submenu: [
+    //     { role: 'reload' },
+    //     { role: 'forceReload' },
+    //     { role: 'toggleDevTools' },
+    //     { type: 'separator' },
+    //     { role: 'resetZoom' },
+    //     { role: 'zoomIn' },
+    //     { role: 'zoomOut' },
+    //     { type: 'separator' },
+    //     { role: 'togglefullscreen' },
+    //   ],
+    // },
     // { role: 'windowMenu' }
     {
       label: 'ウィンドウ',
       submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...(isMac
-          ? [
-              { type: 'separator' },
-              { role: 'front' },
-              { type: 'separator' },
-              { role: 'window' },
-            ]
-          : [{ role: 'close' }]),
+        { label: '開発者モード', role: 'toggleDevTools' }, // 開発者ツールをトグル
+        // { role: 'minimize' },
+        // { role: 'zoom' },
+        // ...(isMac
+        //   ? [
+        //       { type: 'separator' },
+        //       { role: 'front' },
+        //       { type: 'separator' },
+        //       { role: 'window' },
+        //     ]
+        //   : [{ role: 'close' }]),
       ],
     },
-    {
-      role: 'help',
-      submenu: [
-        {
-          label: 'Learn More',
-          click: async (): Promise<void> => {
-            await (
-              await import('electron')
-            ).shell.openExternal('https://electronjs.org');
-          },
-        },
-      ],
-    },
+    // {
+    //   role: 'help',
+    //   submenu: [
+    //     {
+    //       label: 'Learn More',
+    //       click: async (): Promise<void> => {
+    //         await (
+    //           await import('electron')
+    //         ).shell.openExternal('https://electronjs.org');
+    //       },
+    //     },
+    //   ],
+    // },
   ];
 
   const menu = Menu.buildFromTemplate(template);

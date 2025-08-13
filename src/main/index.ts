@@ -5,6 +5,7 @@ import * as path from 'path';
 import { createMenu } from './menu';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
+import { pathToFileURL } from 'url';
 
 let Store: any;
 let settingStore;
@@ -125,8 +126,13 @@ function openSettingsWindow(parentWindow: BrowserWindow): void {
     settingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#/setting`);
   } else {
     // 本番用（ビルド後）
-    settingWindow.loadFile(path.join(__dirname, '../renderer/index.html'), {
-      hash: 'setting',
+    settingWindow.loadFile(path.join(__dirname, '../renderer/index.html/'));
+
+    // ロード完了後にブラウザ内でハッシュを設定
+    settingWindow.webContents.once('did-finish-load', () => {
+      settingWindow.webContents.executeJavaScript(
+        `window.location.hash = '#setting';`,
+      );
     });
   }
 
