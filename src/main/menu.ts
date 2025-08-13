@@ -15,7 +15,7 @@ export function createMenu(): void {
           {
             label: 'LoreNote',
             submenu: [
-              { role: 'about' },
+              { label: 'LoreNoteについて', role: 'about' },
               { type: 'separator' },
               {
                 label: '設定',
