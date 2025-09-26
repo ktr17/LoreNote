@@ -41,7 +41,10 @@ const Scrap = ({
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const scrapRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     setTitle(scrap.getTitle());
@@ -54,7 +57,6 @@ const Scrap = ({
 
   const handleContentChange = useCallback(
     (value: string): void => {
-      // Added return type
       setContent(value);
       onContentChange(scrap.id, value);
 
@@ -67,42 +69,88 @@ const Scrap = ({
     [scrap.id, onContentChange, onTitleChange, title],
   );
 
-  /**
-   * タイトルを編集したとき、指定時間経過後にファイル名を変更する
-   */
-  const updateTitle = useMemo(
-    () =>
-      debounce(async (id: string, newTitle: string) => {
-        try {
-          const projectPath = await window.api.project.getPath();
-          const oldTitle = await window.api.scrap.getTitle(id);
-          const oldPath = `${projectPath}/${oldTitle}.md`;
-          const newPath = `${projectPath}/${newTitle}.md`;
+  // タイトル確定処理
+  const confirmTitleChange = useCallback(async (): Promise<void> => {
+    if (!isEditingTitle) return;
 
-          await window.api.file.rename(oldPath, newPath);
-          await window.api.scrap.updateTitle(id, newTitle);
-          onTitleChange(scrap.id, newTitle);
-        } catch (error) {
-          console.error('タイトル更新エラー: ', error);
+    try {
+      const projectPath = await window.api.project.getPath();
+      const oldTitle = scrap.getTitle();
+      const oldPath = `${projectPath}/${oldTitle}.md`;
+      const newPath = `${projectPath}/${title}.md`;
+
+      if (title !== oldTitle && title.trim()) {
+        onTitleChange(scrap.id, title);
+      }
+    } catch (error) {
+      console.error('タイトル更新エラー: ', error);
+      // エラー時は元のタイトルに戻す
+      setTitle(scrap.getTitle());
+    } finally {
+      setIsEditingTitle(false);
+    }
+  }, [title, scrap, onTitleChange, isEditingTitle]);
+
+  // キーボードイベントハンドラ
+  const handleTitleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>): void => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+
+        // IME変換確定時のEnter
+        if (e.nativeEvent.isComposing) {
+          return;
         }
-      }, 2000), // 最後の入力から2000ms後に実行
-    [onTitleChange],
+        titleInputRef.current?.blur();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+
+        // キャンセルフラグを立てる
+        setIsCancelling(true);
+
+        const originalTitle = scrap.getTitle();
+
+        setTitle(originalTitle);
+        setIsEditingTitle(false);
+
+        setTimeout(() => {
+          titleInputRef.current?.blur();
+          // フラグをリセット
+          setTimeout(() => {
+            setIsCancelling(false);
+          }, 10);
+        }, 0);
+      }
+    },
+    [title, scrap, isEditingTitle],
   );
 
-  /**
-   * メモのタイトル(ファイル名)を変更したときに、scraps.jsonとファイル名を変更する
-   */
-  const handleTitleChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ): Promise<void> => {
-    const newTitle = e.target.value;
-    setTitle(newTitle);
-    onTitleChange(scrap.id, newTitle);
-  };
+  // フォーカスイベントハンドラ
+  const handleTitleFocus = useCallback((): void => {
+    setIsEditingTitle(true);
+  }, []);
+
+  // フォーカスがハズレた場合にファイル名を更新する
+  const handleTitleBlur = useCallback((): void => {
+    if (isCancelling) {
+      return;
+    }
+
+    confirmTitleChange();
+  }, [confirmTitleChange, isCancelling]);
+  // タイトル変更処理（リアルタイム表示のみ）
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>): void => {
+      const newTitle = e.target.value;
+      setTitle(newTitle);
+    },
+    [],
+  );
 
   const handleDelete = (): void => {
     setShowConfirm(true);
   };
+
   const deleteScrap = (): void => {
     onDelete(scrap.id);
     setShowConfirm(false);
@@ -114,22 +162,20 @@ const Scrap = ({
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
     scrapRef.current?.classList.add('dragging');
-    onDragStart(index); // 親にドラッグ元のインデックスを通知
+    onDragStart(index);
   };
 
   const handleDragOver = (e: React.DragEvent): void => {
-    // Added return type
     e.preventDefault();
     onDragOver(index);
   };
 
   const handleDragEnd = (): void => {
     scrapRef.current?.classList.remove('dragging');
-    onDragEnd(); // ドラッグ終了を親に通知（並び順変更など）
+    onDragEnd();
   };
 
   const selectFolder = async (): Promise<void> => {
-    // Added return type
     const folder = await window.electronAPI.openFolderDialog();
     if (folder) {
       await window.api.project.savePath(folder);
@@ -149,11 +195,13 @@ const Scrap = ({
     >
       <div className="scrap-header">
         <input
+          ref={titleInputRef}
           type="text"
           value={title}
-          onChange={(e) => {
-            handleTitleChange(e);
-          }}
+          onChange={handleTitleChange}
+          onKeyDown={handleTitleKeyDown}
+          onFocus={handleTitleFocus}
+          onBlur={handleTitleBlur}
           placeholder="タイトルを入力"
           className="scrap-title-input"
         />
