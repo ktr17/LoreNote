@@ -107,9 +107,6 @@ const Scrap = ({
 
       if (title.trim() !== oldTitle) {
         console.log('ファイル名変更実行:', oldTitle, '->', title.trim());
-        // ここで実際のファイル名変更処理
-        // await window.api.file.rename(oldPath, newPath);
-        // await window.api.scrap.updateTitle(scrap.id.toString(), title.trim());
         onTitleChange(scrap.id, title.trim());
       }
     } catch (error) {
