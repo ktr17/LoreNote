@@ -58,28 +58,31 @@ export function createMenu(): void {
                   });
 
                   settingWindow.on('closed', () => {
-                    console.log('閉じるボタンを押しました。');
                     settingWindow = null;
                   });
                 },
               },
-              // { type: 'separator' },
-              // { role: 'services' },
-              // { type: 'separator' },
-              // { role: 'hide' },
-              // { role: 'hideOthers' },
-              // { role: 'unhide' },
-              // { type: 'separator' },
-              // { role: 'quit' },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide', label: '非表示' },
+              { role: 'hideOthers', label: 'ほかを隠す' },
+              { role: 'unhide', label: 'すべて表示' },
+              { type: 'separator' },
+              { role: 'quit', label: '終了' },
             ],
           },
         ]
       : []),
     // { role: 'fileMenu' }
-    // {
-    //   label: 'ファイル',
-    //   submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
-    // },
+    {
+      label: 'ファイル',
+      submenu: [
+        isMac
+          ? { role: 'close', label: '閉じる' }
+          : { role: 'quit', label: '終了' },
+      ],
+    },
     // { role: 'editMenu' }
     // {
     //   label: '編集',
@@ -130,17 +133,18 @@ export function createMenu(): void {
     {
       label: 'ウィンドウ',
       submenu: [
+        { role: 'minimize', label: '最小化' },
+        { role: 'zoom', label: '拡大縮小' },
+        ...(isMac
+          ? [
+              { type: 'separator' },
+              { role: 'front', label: '前面に表示' },
+              //       { type: 'separator' },
+              //       { role: 'window' },
+            ]
+          : [{ role: 'close' }]),
+        { type: 'separator' },
         { label: '開発者モード', role: 'toggleDevTools' }, // 開発者ツールをトグル
-        // { role: 'minimize' },
-        // { role: 'zoom' },
-        // ...(isMac
-        //   ? [
-        //       { type: 'separator' },
-        //       { role: 'front' },
-        //       { type: 'separator' },
-        //       { role: 'window' },
-        //     ]
-        //   : [{ role: 'close' }]),
       ],
     },
     // {

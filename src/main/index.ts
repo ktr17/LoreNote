@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createMenu } from './menu';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import icon from '../../resources/icon.png?asset';
+import icon from '../../resources/512x512.png?asset';
 import { pathToFileURL } from 'url';
 
 let Store: any;
@@ -13,6 +13,7 @@ let scrapsStore;
 let settingWindow: BrowserWindow | null = null;
 
 const isDev = import.meta.env.MODE === 'development';
+let forceQuit = false;
 
 /**
  * ホームディレクトリに存在するsetting.jsonを管理するためのstoreを返却する
@@ -85,6 +86,14 @@ function createWindow(): BrowserWindow {
   }
 
   mainWindow.on('ready-to-show', () => mainWindow.show());
+
+  // macOSで×ボタンが押された時の処理を追加
+  mainWindow.on('close', (event) => {
+    if (process.platform === 'darwin' && !forceQuit) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
@@ -497,14 +506,31 @@ async function main() {
   if (!projectPath) {
     openSettingsWindow(mainWindow);
   }
+
+  // Cmd+Q で強制終了フラグを立てる
+  app.on('before-quit', () => {
+    forceQuit = true;
+  });
+
+  // ウィンドウが全て閉じられた時の処理
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin' || forceQuit) {
+      app.quit();
+    }
+  });
+
+  // Dockアイコンクリック時にウィンドウを再表示
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    } else {
+      // 既存のウィンドウがあるが隠れている場合は表示
+      const windows = BrowserWindow.getAllWindows();
+      if (windows.length > 0) {
+        windows[0].show();
+      }
+    }
   });
 }
 
 main();
-
-// mac以外では全ウィンドウを閉じたらアプリ終了
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
