@@ -9,7 +9,6 @@ export function createMenu(): void {
   const isMac = process.platform === 'darwin';
 
   const template: MenuItemConstructorOptions[] = [
-    // { role: 'appMenu' }
     ...(isMac
       ? [
           {
@@ -29,7 +28,6 @@ export function createMenu(): void {
                     width: 600,
                     height: 400,
                     modal: true,
-                    // parent: BrowserWindow.getFocusedWindow(),
                     show: false,
                     webPreferences: {
                       preload: path.join(__dirname, '../preload/preload.js'),
@@ -74,7 +72,6 @@ export function createMenu(): void {
           },
         ]
       : []),
-    // { role: 'fileMenu' }
     {
       label: 'ファイル',
       submenu: [
@@ -83,37 +80,17 @@ export function createMenu(): void {
           : { role: 'quit', label: '終了' },
       ],
     },
-    // { role: 'editMenu' }
-    // {
-    //   label: '編集',
-    //   submenu: [
-    //     { role: 'undo' },
-    //     { role: 'redo' },
-    //     { type: 'separator' },
-    //     { role: 'cut' },
-    //     { role: 'copy' },
-    //     { role: 'paste' },
-    //     ...(isMac
-    //       ? [
-    //           { role: 'pasteAndMatchStyle' },
-    //           { role: 'delete' },
-    //           { role: 'selectAll' },
-    //           { type: 'separator' },
-    //           {
-    //             label: 'Speech',
-    //             submenu: [
-    //               {
-    //                 role: 'startSpeaking',
-    //               },
-    //               {
-    //                 role: 'stopSpeaking',
-    //               },
-    //             ],
-    //           },
-    //         ]
-    //       : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
-    //   ],
-    // },
+    {
+      label: '編集',
+      submenu: [
+        { role: 'undo', label: '元に戻す' },
+        { role: 'redo', label: 'やり直す' },
+        { type: 'separator' },
+        { role: 'cut', label: '切り取り' },
+        { role: 'copy', label: 'コピー' },
+        { role: 'paste', label: '貼り付け' },
+      ],
+    },
     // { role: 'viewMenu' }
     // {
     //   label: '表示',
