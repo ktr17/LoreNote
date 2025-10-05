@@ -1,6 +1,6 @@
 {
   "name": "LoreNote",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "ktr17",
@@ -51,7 +51,7 @@
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:mac": "electron-vite build && electron-builder --mac dmg zip",
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
