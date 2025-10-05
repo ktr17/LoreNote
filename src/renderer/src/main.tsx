@@ -1,11 +1,11 @@
-import './assets/main.css'
+// import './assets/main.css'
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { HashRouter, Route, Routes } from 'react-router-dom'
-import App from './App'
-import Setting from './components/Setting.tsx'
-
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { HashRouter, Route, Routes } from 'react-router-dom';
+import App from './App';
+import Setting from './components/Setting.tsx';
+import './assets/main.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           element={
             <Setting
               onClose={() => {
-                console.log('閉じます')
+                window.close();
               }}
             />
           }
@@ -24,5 +24,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <Route path="/" element={<App />} />
       </Routes>
     </HashRouter>
-  </React.StrictMode>
-)
+  </React.StrictMode>,
+);

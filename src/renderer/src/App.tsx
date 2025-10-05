@@ -3,14 +3,12 @@ import Button from './components/Button';
 import Scrap from './components/Scrap';
 import Setting from './components/Setting';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
-import './assets/main.css';
 import { initializeProject } from './utils/fileUtils';
 import { useLocation } from 'react-router-dom';
 
 function App(): JSX.Element {
   const location = useLocation();
   const [showSetting, setShowSetting] = useState(location.hash === '#setting');
-  console.log('App component rendered');
 
   const {
     scraps,
@@ -29,7 +27,6 @@ function App(): JSX.Element {
     setShowSetting(location.hash === '#setting');
   }, [location]);
 
-
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // ファイル保存処理
@@ -37,13 +34,13 @@ function App(): JSX.Element {
     id: number,
     content: string,
     title: string,
-    filePath?: string
+    filePath?: string,
   ): Promise<void> => {
     try {
       // ファイル名はタイトルに基づいて生成
       const fileName =
         filePath ||
-        `${title.replace(/[^a-z0-9\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fa5]/gi, '_').toLowerCase()}.md`
+        `${title.replace(/[^a-z0-9\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fa5]/gi, '_').toLowerCase()}.md`;
 
       // レンダラープロセスからPreloadプロセスを経由して、メインプロセスの保存処理を呼び出す
       const result = await window.api.file.save(fileName, content);
@@ -64,17 +61,18 @@ function App(): JSX.Element {
   }, []);
 
   // ドラッグ中の処理
-  const handleDragOver = useCallback((hoverIndex: number): void => {
+  const handleDragOver = useCallback(
+    (hoverIndex: number): void => {
       if (draggedIndex === null || draggedIndex === hoverIndex) {
-        return
+        return;
       }
       // 同一スクラップの上にいる時間が長いと reorder が無駄に起きてしまう
       // → dragover は頻繁に発火するため、一度 reorder した後は index が変わるまで無視
-      reorderScraps(draggedIndex, hoverIndex)
-      setDraggedIndex(hoverIndex)
+      reorderScraps(draggedIndex, hoverIndex);
+      setDraggedIndex(hoverIndex);
     },
-    [draggedIndex, reorderScraps]
-  )
+    [draggedIndex, reorderScraps],
+  );
 
   // ドラッグ終了時の処理
   const handleDragEnd = useCallback((): void => {
@@ -82,11 +80,11 @@ function App(): JSX.Element {
 
     // `scraps` は reorderScraps の useCallback で更新済みのはず
     // UUID と order の一覧を main プロセスに送信
-    const updatedScraps = scraps.map(scrap => ({
+    const updatedScraps = scraps.map((scrap) => ({
       id: scrap.id,
       type: scrap.type,
       title: scrap.title,
-      order: scrap.order
+      order: scrap.order,
     }));
     window.api.scrap.updateOrder(updatedScraps);
   }, [scraps]);
@@ -95,11 +93,24 @@ function App(): JSX.Element {
     <div className="app-container">
       <header className="app-header">
         <h1 className="app-title">LoreNote</h1>
-        <Button onClick={addScrap} variant="primary">
-          新しいメモを追加
+        <Button onClick={addScrap} variant="additionalMemo" size="addBtn">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          メモを追加
         </Button>
       </header>
-
       <main className="app-content">
         <div className="scraps-container">
           {scraps.map((scrap, index) => (
