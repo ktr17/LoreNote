@@ -1,62 +1,74 @@
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 
 class ScrapModel {
   // markdownファイルを識別するためのUUID
-  id: string
+  id: string;
   // markdownの文章
-  content: string
+  content: string;
   // スクラップのタイトル
-  title: string
+  title: string;
   // スクラップの表示順序
-  order: number
+  order: number;
 
-  constructor({ id = uuidv4(), content = '', title = '', order = 0 }: Partial<ScrapModel> = {}) {
-    this.id = id
-    this.content = content
-    this.title = title
-    this.order = order
+  constructor({
+    id = uuidv4(),
+    content = '',
+    title = '',
+    order = 0,
+  }: Partial<ScrapModel> = {}) {
+    this.id = id;
+    this.content = content;
+    this.title = title;
+    this.order = order;
   }
   /**
    * Markdownのテキストを取得する
    */
   getContent(): string {
-    return this.content
+    return this.content;
   }
 
   /**
    * Markdownのテキストを入力する
    */
   setContent(content: string): void {
-    this.content = content
+    this.content = content;
   }
 
   /**
    * タイトルを取得する
    */
   getTitle(): string {
-    return this.title
+    return this.title;
   }
 
   /**
    * タイトルを設定する
    */
   setTitle(title: string): void {
-    this.title = title
+    this.title = title;
   }
 
   /**
    * 表示順序を取得する
    */
   getOrder(): number {
-    return this.order
+    return this.order;
   }
 
   /**
    * 表示順序を設定する
    */
   setOrder(order: number): void {
-    this.order = order
+    this.order = order;
+  }
+  /**
+   * Markdownファイルを削除する
+   */
+  async deleteFile(projectPath: string): Promise<void> {
+    const filePath = `${projectPath}/${this.title}.md`;
+    await window.api.file.delete(filePath);
   }
 }
 
-export default ScrapModel
+export default ScrapModel;

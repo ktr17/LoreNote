@@ -1,10 +1,10 @@
-import React from 'react'
+import React from 'react';
 
 interface ButtonProps {
   onClick: () => void;
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'addBtn';
   fullWidth?: boolean;
   disabled?: boolean;
   className?: string;
@@ -17,36 +17,44 @@ const Button: React.FC<ButtonProps> = ({
   size = 'medium',
   fullWidth = false,
   disabled = false,
-  className = ''
+  className = '',
 }) => {
   // スタイルの設定
   const baseStyle =
-    'rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
+    'rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 border-none';
 
-  // バリアントに基づくスタイル
+  // バリアントに基づくスタイル(Lookup Table)
   const variantStyles = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+    secondary:
+      'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500',
+    danger: 'bg-red-500 text-white hover:bg-red-700 focus:ring-red-500',
+    additionalMemo:
+      'flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 transition rounded-xl px-4 py-2 text-sm font-medium shadow-sm',
+    deleteMemo:
+      'flex items-center gap-1 text-red-500 hover:text-white border border-red-300 hover:bg-red-400 transition rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm',
   };
 
-  // サイズに基づくスタイル
+  // サイズに基づくスタイル(Lookup Table)
   const sizeStyles = {
     small: 'px-3 py-1.5 text-sm',
     medium: 'px-4 py-2 text-base',
-    large: 'px-6 py-3 text-lg'
+    large: 'px-6 py-3 text-lg',
+    addBtn: 'px-4 py-2 w-40',
   };
 
   // 幅のスタイル
-  const widthStyle = fullWidth ? 'w-full' : '';
+  const widthStyle = fullWidth ? 'w-full' : 'w-24';
 
   // 無効状態のスタイル
-  const disabledStyle = disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
+  const disabledStyle = disabled
+    ? 'opacity-50 cursor-not-allowed'
+    : 'cursor-pointer';
 
   const buttonStyle = `${baseStyle} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${disabledStyle} ${className}`;
 
   return (
-    <button className={buttonStyle} onClick={onClick} disabled={disabled} type="button">
+    <button className={variantStyles[variant]} onClick={onClick} type="button">
       {children}
     </button>
   );

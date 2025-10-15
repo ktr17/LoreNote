@@ -32,7 +32,10 @@ const api = {
      * @param textData 保存する文字列データ
      * @returns 保存先のファイルパス、または何も返さない（上書き時など）
      */
-    async save(currentPath: string, textData: string): Promise<{ filePath: string } | void> {
+    async save(
+      currentPath: string,
+      textData: string,
+    ): Promise<{ filePath: string } | void> {
       return await ipcRenderer.invoke('save-file', currentPath, textData);
     },
 
@@ -52,6 +55,14 @@ const api = {
      */
     async rename(oldPath: string, newPath: string): Promise<boolean> {
       return await ipcRenderer.invoke('rename', oldPath, newPath);
+    },
+    /**
+     * ファイルを削除します。
+     * @param filePath 削除対象のファイル名を含む絶対パス
+     * @returns ファイル削除に成功すればtrue、失敗すればfalse
+     */
+    async delete(filePath: string): Promise<boolean> {
+      return await ipcRenderer.invoke('delete', filePath);
     },
   },
 
@@ -99,6 +110,14 @@ const api = {
     async getTitle(id: string): Promise<string> {
       return await ipcRenderer.invoke('get-title', id);
     },
+    /**
+     * scraps.jsonからメモを削除します。
+     * @params id
+     * @return 削除が成功 true、失敗 false
+     */
+    async deleteScrap(id: string): Promise<boolean> {
+      return await ipcRenderer.invoke('delete-scrap', id);
+    },
   },
 
   project: {
@@ -135,22 +154,6 @@ const api = {
     async getPath(): Promise<string | null> {
       return await ipcRenderer.invoke('get-project-path');
     },
-
-    /**
-     * エディタの表示行数を設定します。
-     * @params maxEditorHeight 表示行数
-     * @returns 設定成功時はtrue
-     */
-    async saveMaxEditorHeight(lineNum: number): Promise<boolean> {
-      return await ipcRenderer.invoke('save-max-editor-height', lineNum);
-    },
-    /**
-     * エディタの表示行数を取得します。
-     * @returns 表示行数
-     */
-    async getMaxEditorHeight(): Promise<number | null> {
-      return await ipcRenderer.invoke('get-max-editor-height');
-    },
   },
 
   dialog: {
@@ -168,8 +171,8 @@ const api = {
      */
     async openFolder(): Promise<{ folderPath: string; canceld: boolean }> {
       return await ipcRenderer.invoke('open-dialog-folder');
-    }
-  }
+    },
+  },
 };
 
 // グローバルな `api` 名前空間として、各種機能をレンダラープロセスに公開

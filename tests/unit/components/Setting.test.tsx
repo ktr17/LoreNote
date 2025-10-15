@@ -17,8 +17,10 @@ describe('Setting Component', () => {
         getMaxEditorHeight: vi.fn().mockResolvedValue(90),
       },
       dialog: {
-        openFolder: vi.fn().mockResolvedValue({ canceled: false, folderPath: '/new/path' }),
-      }
+        openFolder: vi
+          .fn()
+          .mockResolvedValue({ canceled: false, folderPath: '/new/path' }),
+      },
     };
   });
 

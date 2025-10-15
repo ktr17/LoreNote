@@ -1,23 +1,23 @@
+import { defineConfig } from 'vitest/config';
 import { Menu, MenuItemConstructorOptions, BrowserWindow } from 'electron';
-import * as path from 'path'
+import * as path from 'path';
 
 let settingWindow: BrowserWindow | null = null;
 const isDev = import.meta.env.MODE === 'development';
-
 
 export function createMenu(): void {
   const isMac = process.platform === 'darwin';
 
   const template: MenuItemConstructorOptions[] = [
-    // { role: 'appMenu' }
     ...(isMac
       ? [
           {
             label: 'LoreNote',
             submenu: [
-              { role: 'about' },
+              { label: 'LoreNoteについて', role: 'about' },
               { type: 'separator' },
-              { label: 'setting',
+              {
+                label: '設定',
                 click: async (): Promise<void> => {
                   if (settingWindow) {
                     settingWindow.focus();
@@ -28,19 +28,27 @@ export function createMenu(): void {
                     width: 600,
                     height: 400,
                     modal: true,
-                    // parent: BrowserWindow.getFocusedWindow(),
                     show: false,
                     webPreferences: {
                       preload: path.join(__dirname, '../preload/preload.js'),
                       nodeIntegration: true,
                       contextIsolation: true,
-                      sandbox: false
+                      sandbox: false,
                     },
                   });
                   if (isDev) {
                     settingWindow.loadURL('http://localhost:5173/#setting');
                   } else {
-                    settingWindow.loadFile('../renderer/index.html', { hash: 'setting' });
+                    settingWindow.loadFile(
+                      path.join(__dirname, '../renderer/index.html/'),
+                    );
+
+                    // ロード完了後にブラウザ内でハッシュを設定
+                    settingWindow.webContents.once('did-finish-load', () => {
+                      settingWindow.webContents.executeJavaScript(
+                        `window.location.hash = '#setting';`,
+                      );
+                    });
                   }
 
                   settingWindow.once('ready-to-show', () => {
@@ -48,105 +56,89 @@ export function createMenu(): void {
                   });
 
                   settingWindow.on('closed', () => {
-                    console.log("閉じるボタンを押しました。")
                     settingWindow = null;
                   });
-                }
+                },
               },
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideOthers' },
-              { role: 'unhide' },
+              { role: 'hide', label: '非表示' },
+              { role: 'hideOthers', label: 'ほかを隠す' },
+              { role: 'unhide', label: 'すべて表示' },
               { type: 'separator' },
-              { role: 'quit' }
-            ]
-          }
+              { role: 'quit', label: '終了' },
+            ],
+          },
         ]
       : []),
-    // { role: 'fileMenu' }
     {
       label: 'ファイル',
-      submenu: [isMac ? { role: 'close' } : { role: 'quit' }]
+      submenu: [
+        isMac
+          ? { role: 'close', label: '閉じる' }
+          : { role: 'quit', label: '終了' },
+      ],
     },
-    // { role: 'editMenu' }
     {
       label: '編集',
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: '元に戻す' },
+        { role: 'redo', label: 'やり直す' },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        ...(isMac ? [
-              { role: 'pasteAndMatchStyle' },
-              { role: 'delete' },
-              { role: 'selectAll' },
-              { type: 'separator' },
-              {
-                label: 'Speech',
-                submenu: [
-                  {
-                    role: 'startSpeaking'
-                  },
-                  {
-                    role: 'stopSpeaking'
-                  }
-                ]
-            }
-        ] : [
-          { role: 'delete' },
-          { type: 'separator' },
-          { role: 'selectAll' }
-        ])
-      ]
+        { role: 'cut', label: '切り取り' },
+        { role: 'copy', label: 'コピー' },
+        { role: 'paste', label: '貼り付け' },
+      ],
     },
     // { role: 'viewMenu' }
-    {
-      label: '表示',
-      submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' }
-      ]
-    },
+    // {
+    //   label: '表示',
+    //   submenu: [
+    //     { role: 'reload' },
+    //     { role: 'forceReload' },
+    //     { role: 'toggleDevTools' },
+    //     { type: 'separator' },
+    //     { role: 'resetZoom' },
+    //     { role: 'zoomIn' },
+    //     { role: 'zoomOut' },
+    //     { type: 'separator' },
+    //     { role: 'togglefullscreen' },
+    //   ],
+    // },
     // { role: 'windowMenu' }
     {
       label: 'ウィンドウ',
       submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        ...(isMac ? [
-          { type: 'separator' },
-          { role: 'front' },
-          { type: 'separator' },
-          { role: 'window' }
-        ] : [
-          { role: 'close' }
-        ])
-      ]
+        { role: 'minimize', label: '最小化' },
+        { role: 'zoom', label: '拡大縮小' },
+        ...(isMac
+          ? [
+              { type: 'separator' },
+              { role: 'front', label: '前面に表示' },
+              //       { type: 'separator' },
+              //       { role: 'window' },
+            ]
+          : [{ role: 'close' }]),
+        { type: 'separator' },
+        { label: '開発者モード', role: 'toggleDevTools' }, // 開発者ツールをトグル
+      ],
     },
-    {
-      role: 'help',
-      submenu: [
-        {
-          label: 'Learn More',
-          click: async (): Promise<void> => {
-            await (await import('electron')).shell.openExternal('https://electronjs.org')
-          }
-        }
-      ]
-    }
-  ]
+    // {
+    //   role: 'help',
+    //   submenu: [
+    //     {
+    //       label: 'Learn More',
+    //       click: async (): Promise<void> => {
+    //         await (
+    //           await import('electron')
+    //         ).shell.openExternal('https://electronjs.org');
+    //       },
+    //     },
+    //   ],
+    // },
+  ];
 
-  const menu = Menu.buildFromTemplate(template)
-  Menu.setApplicationMenu(menu)
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
 }
