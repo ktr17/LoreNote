@@ -125,10 +125,6 @@ body {
   padding: 1rem;
 }
 
-.markdown-editor .CodeMirror {
-  height: 100% !important;
-}
-
 /* Responsive styles */
 @media (max-width: 768px) {
   .app-header {
