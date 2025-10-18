@@ -4,7 +4,6 @@ import 'easymde/dist/easymde.min.css';
 import type { Options } from 'easymde';
 import useEditorSetting from '../hooks/useEditorSetting';
 
-// Markdownエディタ用のモジュール
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -34,7 +33,6 @@ export const MarkdownEditor = ({
       e.preventDefault();
       e.stopPropagation();
     });
-
     cm.on('dragover', (cmInstance, e: Event) => {
       e.preventDefault();
     });

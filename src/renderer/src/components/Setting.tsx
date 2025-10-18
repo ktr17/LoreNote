@@ -11,15 +11,18 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
 
   useEffect(() => {
     const loadProjectPath = async (): Promise<void> => {
-      const path = await window.api.project.getPath();
-      if (path) {
-        setProjectPath(path);
+      try {
+        const path = await window.api.project.getPath();
+        if (path) {
+          setProjectPath(path);
+        }
+      } catch (error) {
+        console.error('getPath()の取得エラー: ', error);
       }
     };
     const loadIntervalTime = async (): Promise<void> => {
       try {
         const intervalTime = await window.api.project.getInterval();
-        console.log('取得した intervalTime:', intervalTime);
         setSaveInterval(Number(intervalTime));
       } catch (error) {
         console.error('getIntervalTime でエラー:', error);

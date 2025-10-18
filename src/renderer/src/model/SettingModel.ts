@@ -1,8 +1,7 @@
 class SettingModel {
-  private _maxEditorHeight: number = 400; // todo この値が変わらないんですよね。
+  private _maxEditorHeight: number = 200;
 
   private listeners = new Set<() => void>();
-  private _count: number = 0;
   /**
    * 現在のエディタの高さ設定値を取得する
    */
@@ -18,13 +17,11 @@ class SettingModel {
     if (this._maxEditorHeight !== value) {
       this._maxEditorHeight = value;
       this.emitChange();
-      console.log("高さを表示" + this._maxEditorHeight);
     }
   }
 
   subscribe(callback: () => void): () => void {
     this.listeners.add(callback);
-    console.log("サブスクライブです" + this._maxEditorHeight);
 
     // 即時通知で初期値も反映されるように
     callback();
@@ -34,7 +31,6 @@ class SettingModel {
 
   private emitChange(): void {
     for (const listener of this.listeners) {
-      console.log(`listenerの名前： ${listener}`)
       listener();
     }
   }
