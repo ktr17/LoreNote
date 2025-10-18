@@ -140,6 +140,53 @@ const api = {
     },
 
     /**
+     * エディタの表示の高さを保存します。
+     * @param editorHeight エディタの表示高さ(pxを指定)
+     * @returns 設定成功時はtrue
+     */
+    async saveEditorHeight(editorHeight: number): Promise<boolean> {
+      return await ipcRenderer.invoke('save-editor-height', editorHeight);
+    },
+
+    /**
+     * エディタの高さの更新通知
+     */
+    notifyEditorHeight(height: number): void {
+      ipcRenderer.send('editor-height-updated', height);
+    },
+
+    /**
+     * エディタ高さ変更イベントを購読する
+     * @param callback は引数で受け取るアロー関数。callbackの引数はheight: numberで、戻り値はvoid
+     * @returns void
+     */
+    // TODO: 呼び出し元なしのため、不要↓
+    onEditorHeightUpdated(callback: (height: number) => void): void {
+      // イベントリスナーを登録
+      ipcRenderer.on('editor-height-updated', (_, height) => callback(height));
+      console.log('イベントリスナー登録成功');
+    },
+    // TODO: 呼び出し元なしのため、不要↑
+    offEditorHeightUpdated(callback: (height: number) => void): void {
+      ipcRenderer.removeListener('editor-height-updated', (_, height) =>
+        callback(height),
+      );
+    },
+    /**
+     * send-height-updated イベントを受信する
+     */
+    onHeightUpdated(callback: (height: number) => void): void {
+      ipcRenderer.on('send-height-updated', (_, height) => callback(height));
+    },
+    /**
+     * send-height-updated リスナーを削除する
+     */
+    offHeightUpdated(callback: (height: number) => void): void {
+      ipcRenderer.removeListener('send-height-updated', (_, height) =>
+        callback(height),
+      );
+    },
+    /**
      * 現在設定されているファイルの保存間隔を取得します。
      * @returns 保存間隔（秒）。未設定時はnull。
      */
@@ -153,6 +200,31 @@ const api = {
      */
     async getPath(): Promise<string | null> {
       return await ipcRenderer.invoke('get-project-path');
+    },
+
+    /**
+     * 保存済みのエディタの高さを取得します。
+     * @returns エディタの高さ(px)。存在しない場合はnull。
+     */
+    async getEditorHeight(): Promise<number | null> {
+      return await ipcRenderer.invoke('get-editor-height');
+    },
+  },
+
+  navigation: {
+    /**
+     * setting画面への画面遷移のためのイベント受信
+     * @param callback
+     */
+    onNavigateToSetting(callback: () => void): void {
+      ipcRenderer.on('navigate-to-setting', callback);
+    },
+
+    /**
+     * setting画面げの遷移イベントを削除
+     */
+    offNavigateToSettingListener: () => {
+      ipcRenderer.removeAllListeners('navigate-to-setting');
     },
   },
 
@@ -177,3 +249,4 @@ const api = {
 
 // グローバルな `api` 名前空間として、各種機能をレンダラープロセスに公開
 contextBridge.exposeInMainWorld('api', api);
+export { api };

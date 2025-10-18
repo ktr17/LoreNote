@@ -1,7 +1,8 @@
-import React, { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef, useEffect } from 'react';
 import SimpleMde from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
 import type { Options } from 'easymde';
+import useEditorSetting from '../hooks/useEditorSetting';
 
 // Markdownエディタ用のモジュール
 interface MarkdownEditorProps {
@@ -15,6 +16,10 @@ export const MarkdownEditor = ({
   onChange,
   placeholder = 'ここに内容を入力してください',
 }: MarkdownEditorProps): JSX.Element => {
+  const { editorHeight } = useEditorSetting();
+  const cmRef = useRef<CodeMirror.Editor | null>(null);
+  console.log('📏 editorHeight in MarkdownEditor:', editorHeight);
+
   const handleChange = (val: string): void => {
     onChange(val);
   };
@@ -23,7 +28,8 @@ export const MarkdownEditor = ({
   const getCmInstance = useCallback((cm: CodeMirror.Editor) => {
     if (!cm) return;
 
-    // CodeMirrorの内部イベントで阻止
+    cmRef.current = cm;
+
     cm.on('drop', (cmInstance, e: Event) => {
       e.preventDefault();
       e.stopPropagation();
@@ -41,12 +47,20 @@ export const MarkdownEditor = ({
       placeholder: placeholder,
       status: false,
       toolbar: false,
+      minHeight: `${editorHeight}px`,
     } as Options;
-  }, [placeholder]);
+  }, [placeholder, editorHeight]);
+
+  useEffect(() => {
+    if (cmRef.current) {
+      cmRef.current.setSize(null, `${editorHeight}px`);
+    }
+  }, [editorHeight]);
 
   return (
     <div
-      className="markdown-editor"
+      className="markdown-editor h-[var(--editor-height)]"
+      style={{ height: `${editorHeight}px` }}
       onDrop={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -56,6 +70,7 @@ export const MarkdownEditor = ({
       }}
     >
       <SimpleMde
+        key="markdown-editor"
         value={value}
         onChange={handleChange}
         options={editorOptions}
