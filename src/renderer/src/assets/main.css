@@ -125,20 +125,8 @@ body {
   padding: 1rem;
 }
 
-/* Override SimpleMDE styles */
-.markdown-editor .EasyMDEContainer {
-  border: none;
-}
-
 .markdown-editor .CodeMirror {
-  border: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-.markdown-editor .editor-toolbar {
-  border: none;
-  background-color: var(--bg-light);
+  height: 100% !important;
 }
 
 /* Responsive styles */
