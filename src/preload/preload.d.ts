@@ -26,7 +26,7 @@ declare global {
       };
       project: {
         savePath(path: string): Promise<boolean>;
-        saveInterval(intervalTime: string): Promise<boolean>;
+        saveInterval(intervalTime: number): Promise<boolean>;
         saveEditorHeight(editorHeight: number): Promise<boolean>;
         getInterval(): Promise<number | null>;
         getPath(): Promise<string | null>;

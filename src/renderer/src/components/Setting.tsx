@@ -6,7 +6,8 @@ interface SettingProps {}
 const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
   const [projectPath, setProjectPath] = useState<string>('');
   const [saveInterval, setSaveInterval] = useState<number>(0);
-  const { editorHeight, setEditorHeight } = useEditorSetting();
+  const { editorHeight, setEditorHeight, saveEditorHaight } =
+    useEditorSetting();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
     const resultSaveInterval: any =
       await window.api.project.saveInterval(saveInterval);
     setEditorHeight(editorHeight);
+    saveEditorHaight();
 
     if (resultSavePath || resultSaveInterval) {
       // ファイル保存処理
