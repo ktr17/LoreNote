@@ -1,9 +1,11 @@
+/// <reference path="../../preload/preload.d.ts" />
+
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 import Scrap from './components/Scrap';
 import Setting from './components/Setting';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
-import { initializeProject } from './utils/fileUtils';
 import { useLocation } from 'react-router-dom';
 
 function App(): JSX.Element {
@@ -26,6 +28,21 @@ function App(): JSX.Element {
   useEffect(() => {
     setShowSetting(location.hash === '#setting');
   }, [location]);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // メインプロセスからの設定画面遷移指示を受信
+    const handleNavigateToSetting = () => {
+      navigate('/setting');
+    };
+
+    window.api.navigation.onNavigateToSetting(handleNavigateToSetting);
+
+    return () => {
+      window.api.navigation.offNavigateToSettingListener();
+    };
+  }, [navigate]);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 

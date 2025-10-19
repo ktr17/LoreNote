@@ -15,6 +15,11 @@ if (process.contextIsolated) {
   window.electron = electronAPI;
 }
 
+const heightUpdatedCallbacks = new Set<(height: number) => void>();
+const handleHeightUpdate = (_: any, height: number) => {
+  heightUpdatedCallbacks.forEach((cb) => cb(height));
+};
+
 // --- レンダラー向けAPIの定義と公開 ---
 const api = {
   file: {
@@ -135,8 +140,48 @@ const api = {
      * @param intervalTime 保存間隔（秒を想定）
      * @returns 設定成功時はtrue
      */
-    async saveInterval(intervalTime: string): Promise<boolean> {
+    async saveInterval(intervalTime: number): Promise<boolean> {
       return await ipcRenderer.invoke('save-interval-time', intervalTime);
+    },
+
+    /**
+     * エディタの表示の高さを保存します。
+     * @param editorHeight エディタの表示高さ(pxを指定)
+     * @returns 設定成功時はtrue
+     */
+    async saveEditorHeight(editorHeight: number): Promise<boolean> {
+      return await ipcRenderer.invoke('save-editor-height', editorHeight);
+    },
+
+    /**
+     * エディタの高さの更新通知
+     */
+    notifyEditorHeight(height: number): void {
+      ipcRenderer.send('editor-height-updated', height);
+    },
+
+    /**
+     * send-height-updated イベントリスナーを登録する
+     * @param callback 登録対象関数
+     */
+    onHeightUpdated(callback: (height: number) => void): void {
+      heightUpdatedCallbacks.add(callback);
+
+      if (heightUpdatedCallbacks.size === 1) {
+        ipcRenderer.on('send-height-updated', handleHeightUpdate);
+      }
+    },
+
+    /**
+     * send-height-updated イベントリスナーを削除する
+     * @param callback 削除対象関数
+     */
+    offHeightUpdated(callback: (height: number) => void): void {
+      heightUpdatedCallbacks.delete(callback);
+
+      if (heightUpdatedCallbacks.size === 0) {
+        ipcRenderer.off('send-height-updated', handleHeightUpdate);
+      }
     },
 
     /**
@@ -153,6 +198,31 @@ const api = {
      */
     async getPath(): Promise<string | null> {
       return await ipcRenderer.invoke('get-project-path');
+    },
+
+    /**
+     * 保存済みのエディタの高さを取得します。
+     * @returns エディタの高さ(px)。存在しない場合はnull。
+     */
+    async getEditorHeight(): Promise<number | null> {
+      return await ipcRenderer.invoke('get-editor-height');
+    },
+  },
+
+  navigation: {
+    /**
+     * setting画面への画面遷移のためのイベント受信
+     * @param callback
+     */
+    onNavigateToSetting(callback: () => void): void {
+      ipcRenderer.on('navigate-to-setting', callback);
+    },
+
+    /**
+     * setting画面げの遷移イベントを削除
+     */
+    offNavigateToSettingListener: () => {
+      ipcRenderer.removeAllListeners('navigate-to-setting');
     },
   },
 
@@ -177,3 +247,4 @@ const api = {
 
 // グローバルな `api` 名前空間として、各種機能をレンダラープロセスに公開
 contextBridge.exposeInMainWorld('api', api);
+export { api };

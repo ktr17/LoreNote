@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import debounce from 'lodash.debounce';
 import MDEditor from './MarkdownEditor';
-import Button from './Button';
 import ScrapModel from '../model/ScrapModel';
 import DropdownMenu from './DropdownMenu';
 import ConfirmDialog from './ConfirmDialog';
@@ -36,7 +34,6 @@ const Scrap = ({
   onDragStart,
   onDragOver,
   onDragEnd,
-  onSave,
 }: ScrapProps): JSX.Element => {
   const [title, setTitle] = useState(scrap.getTitle());
   const [content, setContent] = useState(scrap.getContent());

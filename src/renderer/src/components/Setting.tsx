@@ -1,37 +1,58 @@
 import React, { useState, useEffect } from 'react';
+import useEditorSetting from '../hooks/useEditorSetting';
+import { useNavigate } from 'react-router-dom';
+interface SettingProps {}
 
-interface SettingProps {
-  onClose: () => void;
-}
-
-const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
+const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
   const [projectPath, setProjectPath] = useState<string>('');
   const [saveInterval, setSaveInterval] = useState<number>(0);
+  const { editorHeight, setEditorHeight, saveEditorHaight } =
+    useEditorSetting();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadProjectPath = async (): Promise<void> => {
-      const path = await window.api.project.getPath();
-      if (path) {
-        setProjectPath(path);
+      try {
+        const path = await window.api.project.getPath();
+        if (path) {
+          setProjectPath(path);
+        }
+      } catch (error) {
+        console.error('getPath()の取得エラー: ', error);
       }
     };
     const loadIntervalTime = async (): Promise<void> => {
       try {
         const intervalTime = await window.api.project.getInterval();
-        console.log('取得した intervalTime:', intervalTime);
         setSaveInterval(Number(intervalTime));
       } catch (error) {
         console.error('getIntervalTime でエラー:', error);
       }
     };
+    const loadEdigotHeight = async (): Promise<void> => {
+      try {
+        // TODO: useEditorSettingで実施に変更すること
+        const height = await window.api.project.getEditorHeight();
+        if (height != null) {
+          setEditorHeight(height);
+        }
+      } catch (error) {
+        console.error('getEditorHeight()の取得エラー: ', error);
+      }
+    };
+
     loadProjectPath();
     loadIntervalTime();
+    loadEdigotHeight();
   }, []);
 
   const handleApply = async (): Promise<void> => {
     const resultSavePath: any = await window.api.project.savePath(projectPath);
     const resultSaveInterval: any =
       await window.api.project.saveInterval(saveInterval);
+    setEditorHeight(editorHeight);
+    saveEditorHaight();
+
     if (resultSavePath || resultSaveInterval) {
       // ファイル保存処理
       alert('保存しました。');
@@ -53,7 +74,8 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
     if (!projectPath) {
       alert('プロジェクトパスが空です。\nプロジェクトパスを入力してください。');
     } else {
-      onClose();
+      // mainウィンドウへ遷移する
+      navigate('/');
     }
   };
 
@@ -198,6 +220,44 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
             />
             <span>秒</span>
           </div>
+          <h3
+            style={{
+              fontSize: '20px',
+              fontWeight: 'bold',
+              marginTop: '40px',
+              marginBottom: '16px',
+              borderBottom: '1px solid #444',
+              paddingBottom: '8px',
+              color: '#eee',
+            }}
+          >
+            エディタ設定
+          </h3>
+          {/* エディタの表示高さの入力フィールド */}
+          <div
+            style={{ ...settingItem, display: 'flex', alignItems: 'center' }}
+          >
+            <label style={{ marginRight: '10px', whiteSpace: 'nowrap' }}>
+              高さ
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={editorHeight}
+              onChange={(e) => setEditorHeight(Number(e.target.value))}
+              style={{
+                width: '80px',
+                padding: '8px',
+                backgroundColor: '#2b2b2b',
+                border: '1px solid #555',
+                borderRadius: '5px',
+                color: '#fff',
+                marginRight: '8px',
+              }}
+            />
+            <span>px</span>
+          </div>
+
           <div
             style={{
               marginTop: '40px',
@@ -217,7 +277,7 @@ const Setting: React.FC<SettingProps> = ({ onClose }): JSX.Element => {
                 cursor: 'pointer',
               }}
             >
-              閉じる
+              戻る
             </button>
             <button
               onClick={handleApply}
