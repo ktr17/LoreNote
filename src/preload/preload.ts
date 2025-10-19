@@ -15,6 +15,11 @@ if (process.contextIsolated) {
   window.electron = electronAPI;
 }
 
+const heightUpdatedCallbacks = new Set<(height: number) => void>();
+const handleHeightUpdate = (_: any, height: number) => {
+  heightUpdatedCallbacks.forEach((cb) => cb(height));
+};
+
 // --- レンダラー向けAPIの定義と公開 ---
 const api = {
   file: {
@@ -176,16 +181,24 @@ const api = {
      * send-height-updated イベントを受信する
      */
     onHeightUpdated(callback: (height: number) => void): void {
-      ipcRenderer.on('send-height-updated', (_, height) => callback(height));
+      heightUpdatedCallbacks.add(callback);
+
+      if (heightUpdatedCallbacks.size === 1) {
+        ipcRenderer.on('send-height-updated', handleHeightUpdate);
+      }
     },
+
     /**
      * send-height-updated リスナーを削除する
      */
     offHeightUpdated(callback: (height: number) => void): void {
-      ipcRenderer.removeListener('send-height-updated', (_, height) =>
-        callback(height),
-      );
+      heightUpdatedCallbacks.delete(callback);
+
+      if (heightUpdatedCallbacks.size === 0) {
+        ipcRenderer.off('send-height-updated', handleHeightUpdate);
+      }
     },
+
     /**
      * 現在設定されているファイルの保存間隔を取得します。
      * @returns 保存間隔（秒）。未設定時はnull。
