@@ -161,24 +161,8 @@ const api = {
     },
 
     /**
-     * エディタ高さ変更イベントを購読する
-     * @param callback は引数で受け取るアロー関数。callbackの引数はheight: numberで、戻り値はvoid
-     * @returns void
-     */
-    // TODO: 呼び出し元なしのため、不要↓
-    onEditorHeightUpdated(callback: (height: number) => void): void {
-      // イベントリスナーを登録
-      ipcRenderer.on('editor-height-updated', (_, height) => callback(height));
-      console.log('イベントリスナー登録成功');
-    },
-    // TODO: 呼び出し元なしのため、不要↑
-    offEditorHeightUpdated(callback: (height: number) => void): void {
-      ipcRenderer.removeListener('editor-height-updated', (_, height) =>
-        callback(height),
-      );
-    },
-    /**
-     * send-height-updated イベントを受信する
+     * send-height-updated イベントリスナーを登録する
+     * @param callback 登録対象関数
      */
     onHeightUpdated(callback: (height: number) => void): void {
       heightUpdatedCallbacks.add(callback);
@@ -189,7 +173,8 @@ const api = {
     },
 
     /**
-     * send-height-updated リスナーを削除する
+     * send-height-updated イベントリスナーを削除する
+     * @param callback 削除対象関数
      */
     offHeightUpdated(callback: (height: number) => void): void {
       heightUpdatedCallbacks.delete(callback);
