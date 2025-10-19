@@ -56,7 +56,7 @@ function createWindow(): BrowserWindow {
     width: 900,
     height: 670,
     show: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
@@ -121,7 +121,7 @@ function openSettingsWindow(parentWindow: BrowserWindow): void {
     modal: true,
     show: false, // ← ready-to-show を使うので false にしておく
     resizable: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
       contextIsolation: true,

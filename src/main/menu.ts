@@ -35,6 +35,19 @@ function createMenuTemplate(
   const fileMenu: MenuItemConstructorOptions = {
     label: 'ファイル',
     submenu: [
+      // Windows用に設定メニューを追加
+      ...(!isMac
+        ? [
+            {
+              label: '設定',
+              accelerator: 'Ctrl+,',
+              click: (): void => {
+                mainWindow.webContents.send('navigate-to-setting');
+              },
+            } as MenuItemConstructorOptions,
+            { type: 'separator' } as MenuItemConstructorOptions,
+          ]
+        : []),
       isMac
         ? { role: 'close', label: '閉じる' }
         : { role: 'quit', label: '終了' },
