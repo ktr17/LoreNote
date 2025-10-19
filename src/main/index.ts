@@ -271,6 +271,26 @@ ipcMain.handle('get-interval-time', async () => {
 });
 
 /**
+ * エディタの高さを保存する
+ */
+ipcMain.handle('save-editor-height', async (_event, editorHeight) => {
+  const settingStore = await getSettingStore();
+  if (editorHeight != null && editorHeight != undefined) {
+    settingStore.set('editorHeight', editorHeight);
+  }
+  return true;
+});
+/**
+ * エディタの高さを取得する
+ */
+ipcMain.handle('get-editor-height', async () => {
+  const settingStore = await getSettingStore();
+  const editorHeight = settingStore.get('editorHeight', null);
+
+  return editorHeight !== null ? Number(editorHeight) : null;
+});
+
+/**
  * プロジェクト配下のファイル一覧を取得する
  */
 ipcMain.handle('get-file-list', async () => {
@@ -479,6 +499,17 @@ ipcMain.handle('delete-scrap', async (_event, targetId) => {
   return scrapsStore.set('scraps', updatedScraps);
 });
 
+/**
+ * メインウィンドウへ更新通知
+ */
+ipcMain.on('editor-height-updated', (_event, height) => {
+  const windows = BrowserWindow.getAllWindows();
+  const mainWindow = windows.find((w) => !w.isModal());
+  if (mainWindow) {
+    mainWindow.webContents.send('send-height-updated', height);
+  }
+});
+
 // ファイル操作 IPC
 ipcMain.handle('open-file', openFile);
 ipcMain.handle('save-file', saveFile);
@@ -495,12 +526,11 @@ async function main() {
     optimizer.watchWindowShortcuts(window);
   });
 
-  createMenu();
-  // ここで、設定ファイルを読み込んでアプリを表示する
-  const projectPath = await getProjectPath();
-
   // プロジェクトパスが空欄の場合、Markdownファイルを格納するパスの設定が必要なので、設定画面を開く
   const mainWindow = createWindow();
+  createMenu(mainWindow);
+  // ここで、設定ファイルを読み込んでアプリを表示する
+  const projectPath = await getProjectPath();
 
   // プロジェクトパスが空欄の場合は、設定画面を表示する
   if (!projectPath) {
