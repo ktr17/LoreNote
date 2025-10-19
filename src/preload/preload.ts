@@ -15,6 +15,11 @@ if (process.contextIsolated) {
   window.electron = electronAPI;
 }
 
+const heightUpdatedCallbacks = new Set<(height: number) => void>();
+const handleHeightUpdate = (_: any, height: number) => {
+  heightUpdatedCallbacks.forEach((cb) => cb(height));
+};
+
 // --- レンダラー向けAPIの定義と公開 ---
 const api = {
   file: {
@@ -156,36 +161,29 @@ const api = {
     },
 
     /**
-     * エディタ高さ変更イベントを購読する
-     * @param callback は引数で受け取るアロー関数。callbackの引数はheight: numberで、戻り値はvoid
-     * @returns void
-     */
-    // TODO: 呼び出し元なしのため、不要↓
-    onEditorHeightUpdated(callback: (height: number) => void): void {
-      // イベントリスナーを登録
-      ipcRenderer.on('editor-height-updated', (_, height) => callback(height));
-      console.log('イベントリスナー登録成功');
-    },
-    // TODO: 呼び出し元なしのため、不要↑
-    offEditorHeightUpdated(callback: (height: number) => void): void {
-      ipcRenderer.removeListener('editor-height-updated', (_, height) =>
-        callback(height),
-      );
-    },
-    /**
-     * send-height-updated イベントを受信する
+     * send-height-updated イベントリスナーを登録する
+     * @param callback 登録対象関数
      */
     onHeightUpdated(callback: (height: number) => void): void {
-      ipcRenderer.on('send-height-updated', (_, height) => callback(height));
+      heightUpdatedCallbacks.add(callback);
+
+      if (heightUpdatedCallbacks.size === 1) {
+        ipcRenderer.on('send-height-updated', handleHeightUpdate);
+      }
     },
+
     /**
-     * send-height-updated リスナーを削除する
+     * send-height-updated イベントリスナーを削除する
+     * @param callback 削除対象関数
      */
     offHeightUpdated(callback: (height: number) => void): void {
-      ipcRenderer.removeListener('send-height-updated', (_, height) =>
-        callback(height),
-      );
+      heightUpdatedCallbacks.delete(callback);
+
+      if (heightUpdatedCallbacks.size === 0) {
+        ipcRenderer.off('send-height-updated', handleHeightUpdate);
+      }
     },
+
     /**
      * 現在設定されているファイルの保存間隔を取得します。
      * @returns 保存間隔（秒）。未設定時はnull。
