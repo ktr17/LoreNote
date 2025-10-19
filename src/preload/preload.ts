@@ -140,7 +140,7 @@ const api = {
      * @param intervalTime 保存間隔（秒を想定）
      * @returns 設定成功時はtrue
      */
-    async saveInterval(intervalTime: string): Promise<boolean> {
+    async saveInterval(intervalTime: number): Promise<boolean> {
       return await ipcRenderer.invoke('save-interval-time', intervalTime);
     },
 

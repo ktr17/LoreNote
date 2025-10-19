@@ -5,7 +5,6 @@ export const useEditorSetting = () => {
   useEffect(() => {
     // メインプロセス経由の高さ更新を受信
     const heightUpdateHandler = (height: number) => {
-      console.log('🎯🎯🎯 send-height-updated 受信!!! height=', height);
       sharedSettingViewModel.setMaxEditorHeight(height);
     };
     window.api.project.onHeightUpdated(heightUpdateHandler);
@@ -37,9 +36,18 @@ export const useEditorSetting = () => {
       window.api.project.notifyEditorHeight(value);
     }
   };
+
+  /**
+   * エディタの高さをsetting.jsonへ保存する処理
+   */
+  const saveEditorHaight = () => {
+    return sharedSettingViewModel.saveEditorHeight(editorHeight);
+  };
+
   return {
     editorHeight,
     setEditorHeight,
+    saveEditorHaight,
   };
 };
 

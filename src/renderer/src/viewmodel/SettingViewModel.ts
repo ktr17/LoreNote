@@ -29,18 +29,20 @@ class SettingViewModel {
 
   /**
    * エディタの高さを設定して保存
+   * @param value エディタの高さ
    */
-  async setMaxEditorHeight(value: number): Promise<void> {
-    console.log('setMaxEditorHeight called with:', value);
-
+  setMaxEditorHeight(value: number): void {
     this._maxEditorHeight = value;
     this.emitChange();
+  }
+
+  /**
+   * エディタの高さをsetting.jsonへ保存する
+   * @param value エディタの高さ
+   */
+  async saveEditorHeight(value: number): Promise<void> {
     try {
       await window.api.project.saveEditorHeight(value);
-      console.log(
-        'ファイルに保存する処理をデバッグのため、停止しています:',
-        value,
-      );
     } catch (error) {
       console.error('保存エラー:', error);
     }
