@@ -1,7 +1,8 @@
 import { useSyncExternalStore, useEffect } from 'react';
-import sharedSettingViewModel from '../viewmodel/SettingViewModel';
+import { getSharedSettingViewModel } from '../viewmodel/SettingViewModel';
 
 export const useEditorSetting = () => {
+  const sharedSettingViewModel = getSharedSettingViewModel();
   useEffect(() => {
     // メインプロセス経由の高さ更新を受信
     const heightUpdateHandler = (height: number) => {
