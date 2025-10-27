@@ -1,4 +1,5 @@
 # Lore Note
+
 ## Overview
 
 📘 LoreNote – 学びを、知識に変えるメモアプリ
@@ -48,13 +49,17 @@ volta pin node@22.13.1
 
 ## Test
 
-| Layer        | Test Type  | Tool                                     |
-| -------- | -------- | ----------------------------------------- |
-| Renderer | 単体・UIテスト | **Vitest** + **Testing Library**          |
-| Renderer | コンポーネント  | **@testing-library/react**                |
-| Preload  | 単体テスト    | **Vitest**                                |
-| Main     | 単体/統合テスト | **Vitest**                 |
-<!-- | E2E（統合）  | 実行時シナリオ  | **Playwright** or **Spectron**（Electron用） | -->
+| Layer    | Test Type       | Tool                             |
+| -------- | --------------- | -------------------------------- | -------------------------------------------- | --- |
+| Renderer | 単体・UIテスト  | **Vitest** + **Testing Library** |
+| Renderer | コンポーネント  | **@testing-library/react**       |
+| Preload  | 単体テスト      | **Vitest**                       |
+| Main     | 単体/統合テスト | **Vitest**                       |
+| <!--     | E2E（統合）     | 実行時シナリオ                   | **Playwright** or **Spectron**（Electron用） | --> |
+
+### テスト実行コマンド
+
+`yarn test`
 
 ## Folder structure
 
@@ -75,5 +80,4 @@ volta pin node@22.13.1
 ```
 
 [tree.nathanfriend.com
-](https://tree.nathanfriend.com/?s=(%27options!(%27fancy3~fullPath!false~trailingSlash3~rootDot3)~5(%275%27src-main0Main2r6-*src4component48view8assets4App.tsx7R62preload0Preload9%27)~version!%271%27)*%20%20-9*0-*index.ts72%20Process-3!true4-**5source!6enderer7%3A%208model49%5Cn%01987654320-*)
-
+](<https://tree.nathanfriend.com/?s=(%27options!(%27fancy3~fullPath!false~trailingSlash3~rootDot3)~5(%275%27src-main0Main2r6-*src4component48view8assets4App.tsx7R62preload0Preload9%27)~version!%271%27)*%20%20-9*0-*index.ts72%20Process-3!true4-**5source!6enderer7%3A%208model49%5Cn%01987654320-*>)
