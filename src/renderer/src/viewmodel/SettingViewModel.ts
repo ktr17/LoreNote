@@ -99,6 +99,22 @@ class SettingViewModel {
     }
   }
 }
+let _sharedSettingViewModel: SettingViewModel | null = null;
 
-const sharedSettingViewModel = new SettingViewModel();
-export default sharedSettingViewModel;
+/**
+ * シングルトン
+ * @returns SettinViewModel
+ */
+export const getSharedSettingViewModel = (): SettingViewModel => {
+  if (!_sharedSettingViewModel) {
+    _sharedSettingViewModel = new SettingViewModel();
+  }
+  return _sharedSettingViewModel;
+};
+
+/**
+ * テスト用
+ */
+export const resetSharedSettingViewModel = (): void => {
+  _sharedSettingViewModel = null;
+};

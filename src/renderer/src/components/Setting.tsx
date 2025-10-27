@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useEditorSetting from '../hooks/useEditorSetting';
 import { useNavigate } from 'react-router-dom';
 interface SettingProps {}
@@ -8,6 +8,7 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
   const [saveInterval, setSaveInterval] = useState<number>(0);
   const { editorHeight, setEditorHeight, saveEditorHaight } =
     useEditorSetting();
+  const cursorRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +46,20 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
     loadIntervalTime();
     loadEdigotHeight();
   }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const cursorPosition = input.selectionStart; // カーソル位置を記憶
+
+    setEditorHeight(Number(input.value));
+
+    // 次のレンダリング後にカーソル位置を復元
+    requestAnimationFrame(() => {
+      if (cursorRef.current && cursorPosition !== null) {
+        cursorRef.current.setSelectionRange(cursorPosition, cursorPosition);
+      }
+    });
+  };
 
   const handleApply = async (): Promise<void> => {
     const resultSavePath: any = await window.api.project.savePath(projectPath);
@@ -242,9 +257,9 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
             </label>
             <input
               type="number"
-              min={1}
+              min={50}
               value={editorHeight}
-              onChange={(e) => setEditorHeight(Number(e.target.value))}
+              onChange={handleChange}
               style={{
                 width: '80px',
                 padding: '8px',
@@ -309,15 +324,6 @@ const menuItemStyle: React.CSSProperties = {
 
 const settingItem: React.CSSProperties = {
   marginBottom: '20px',
-};
-
-const selectStyle: React.CSSProperties = {
-  backgroundColor: '#2b2b2b',
-  color: '#fff',
-  border: '1px solid #555',
-  padding: '8px',
-  borderRadius: '5px',
-  width: '100%',
 };
 
 export default Setting;
