@@ -5,6 +5,7 @@ interface SettingProps {}
 
 const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
   const [projectPath, setProjectPath] = useState<string>('');
+  const minSaveInterval = 5;
   const [saveInterval, setSaveInterval] = useState<number>(0);
   const { editorHeight, setEditorHeight, saveEditorHaight } =
     useEditorSetting();
@@ -215,14 +216,24 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
           <div
             style={{ ...settingItem, display: 'flex', alignItems: 'center' }}
           >
-            <label style={{ marginRight: '10px', whiteSpace: 'nowrap' }}>
+            <label
+              htmlFor="save-interval"
+              style={{ marginRight: '10px', whiteSpace: 'nowrap' }}
+            >
               保存間隔
             </label>
             <input
+              id="save-interval"
               type="number"
-              min={1}
+              min={minSaveInterval}
               value={saveInterval}
-              onChange={(e) => setSaveInterval(Number(e.target.value))}
+              onChange={(e) => {
+                if (Number(e.target.value) < minSaveInterval) {
+                  setSaveInterval(minSaveInterval);
+                } else {
+                  setSaveInterval(Number(e.target.value));
+                }
+              }}
               style={{
                 width: '80px',
                 padding: '8px',

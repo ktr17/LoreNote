@@ -1,26 +1,30 @@
 // vitest.setup.ts
 import '@testing-library/jest-dom';
+import { mockAnimationsApi } from 'jsdom-testing-mocks';
+
+mockAnimationsApi();
 
 global.ResizeObserver = class ResizeObserver {
-  constructor(callback) {
+  private callback: ResizeObserverCallback;
+
+  constructor(callback: ResizeObserverCallback) {
     this.callback = callback;
   }
 
-  observe(target) {
-    // 必要に応じて初期サイズを通知
-    this.callback([
-      {
-        target,
-        contentRect: {
-          width: 100,
-          height: 100,
-          top: 0,
-          left: 0,
-          bottom: 100,
-          right: 100,
-        },
-      },
-    ]);
+  observe(target: Element) {
+    const entry: ResizeObserverEntry = {
+      target,
+      contentRect: {
+        width: 100,
+        height: 100,
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 100,
+      } as DOMRectReadOnly,
+    } as ResizeObserverEntry;
+
+    this.callback([entry], this);
   }
 
   unobserve() {}

@@ -155,6 +155,13 @@ describe('Setting Component', () => {
     // エディタ高さの変更
     const heightInput = screen.getByDisplayValue('90');
     fireEvent.change(heightInput, { target: { value: '120' } });
-    // expect(screen.getByDisplayValue('120')).toBeInTheDocument();
+  });
+  it('保存間隔が最小値以下を入力できない', async () => {
+    renderWithRouter(<Setting />);
+    const input = screen.getByLabelText('保存間隔');
+    fireEvent.change(input, { target: { value: '1' } });
+    await waitFor(() => {
+      expect(input).toHaveValue(5);
+    });
   });
 });
