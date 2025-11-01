@@ -43,7 +43,7 @@ declare global {
       };
       dialog: {
         openFile(): Promise<{ filePath: string; canceled: boolean }>;
-        openFolder(): Promise<{ folderPath: string; canceld: boolean }>;
+        openFolder(): Promise<{ folderPath: string; canceled: boolean }>;
       };
     };
   }
