@@ -164,4 +164,12 @@ describe('Setting Component', () => {
       expect(input).toHaveValue(5);
     });
   });
+  it('エディタ高さの最小値以下を入力できない', async () => {
+    renderWithRouter(<Setting />);
+    const input = screen.getByLabelText('高さ');
+    fireEvent.change(input, { target: { value: '1' } });
+    await waitFor(() => {
+      expect(input).toHaveValue(50);
+    });
+  });
 });

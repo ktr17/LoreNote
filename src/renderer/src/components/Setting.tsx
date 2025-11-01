@@ -6,7 +6,10 @@ interface SettingProps {}
 const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
   const [projectPath, setProjectPath] = useState<string>('');
   const minSaveInterval = 5;
+  const minEditorHeight = 50;
   const [saveInterval, setSaveInterval] = useState<number>(0);
+  const [localEditorHeight, setLocalEditorHeight] = useState<number>(0);
+
   const { editorHeight, setEditorHeight, saveEditorHaight } =
     useEditorSetting();
   const cursorRef = useRef<HTMLInputElement>(null);
@@ -33,7 +36,6 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
     };
     const loadEdigotHeight = async (): Promise<void> => {
       try {
-        // TODO: useEditorSettingで実施に変更すること
         const height = await window.api.project.getEditorHeight();
         if (height != null) {
           setEditorHeight(height);
@@ -48,28 +50,30 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
     loadEdigotHeight();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    const cursorPosition = input.selectionStart; // カーソル位置を記憶
+  // editorHeightが変わったらLocalEditorHeightも更新する
+  useEffect(() => {
+    setLocalEditorHeight(editorHeight);
+  }, [editorHeight]);
 
-    setEditorHeight(Number(input.value));
-
-    // 次のレンダリング後にカーソル位置を復元
-    requestAnimationFrame(() => {
-      if (cursorRef.current && cursorPosition !== null) {
-        cursorRef.current.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    });
+  // 入力中はローカルstateのみ更新
+  const handleEditorHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value < minEditorHeight) {
+      setLocalEditorHeight(minEditorHeight);
+    } else {
+      setLocalEditorHeight(value);
+    }
   };
 
   const handleApply = async (): Promise<void> => {
     const resultSavePath: any = await window.api.project.savePath(projectPath);
     const resultSaveInterval: any =
       await window.api.project.saveInterval(saveInterval);
-    setEditorHeight(editorHeight);
-    saveEditorHaight();
+    setEditorHeight(localEditorHeight);
 
-    if (resultSavePath || resultSaveInterval) {
+    const resultSaveHeight = await saveEditorHaight(localEditorHeight);
+
+    if (resultSavePath || resultSaveInterval || resultSaveHeight) {
       // ファイル保存処理
       alert('保存しました。');
       console.log('保存しました');
@@ -263,14 +267,18 @@ const Setting: React.FC<SettingProps> = ({}): JSX.Element => {
           <div
             style={{ ...settingItem, display: 'flex', alignItems: 'center' }}
           >
-            <label style={{ marginRight: '10px', whiteSpace: 'nowrap' }}>
+            <label
+              htmlFor="editor-height"
+              style={{ marginRight: '10px', whiteSpace: 'nowrap' }}
+            >
               高さ
             </label>
             <input
+              id="editor-height"
               type="number"
               min={50}
-              value={editorHeight}
-              onChange={handleChange}
+              value={localEditorHeight}
+              onChange={handleEditorHeightChange}
               style={{
                 width: '80px',
                 padding: '8px',

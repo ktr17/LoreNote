@@ -41,8 +41,10 @@ export const useEditorSetting = () => {
   /**
    * エディタの高さをsetting.jsonへ保存する処理
    */
-  const saveEditorHaight = () => {
-    return sharedSettingViewModel.saveEditorHeight(editorHeight);
+  const saveEditorHaight = (height?: number) => {
+    // 引数があればそれを使用、なければ現在の editorHeight を使用
+    const heightToSave = height !== undefined ? height : editorHeight;
+    return sharedSettingViewModel.saveEditorHeight(heightToSave);
   };
 
   return {
