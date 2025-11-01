@@ -50,12 +50,11 @@ volta pin node@22.13.1
 ## Test
 
 | Layer    | Test Type       | Tool                             |
-| -------- | --------------- | -------------------------------- | -------------------------------------------- | --- |
+| -------- | --------------- | -------------------------------- |
 | Renderer | 単体・UIテスト  | **Vitest** + **Testing Library** |
 | Renderer | コンポーネント  | **@testing-library/react**       |
 | Preload  | 単体テスト      | **Vitest**                       |
 | Main     | 単体/統合テスト | **Vitest**                       |
-| <!--     | E2E（統合）     | 実行時シナリオ                   | **Playwright** or **Spectron**（Electron用） | --> |
 
 ### テスト実行コマンド
 
