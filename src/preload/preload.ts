@@ -1,6 +1,7 @@
 import { Scrap } from './../renderer/src/model/Scrap';
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
+import type { Project } from '../types/project';
 
 // --- Electron公式APIの安全な公開 ---
 if (process.contextIsolated) {
@@ -206,6 +207,60 @@ const api = {
      */
     async getEditorHeight(): Promise<number | null> {
       return await ipcRenderer.invoke('get-editor-height');
+    },
+
+    /**
+     * プロジェクト一覧を取得します。
+     * @returns プロジェクトの配列
+     */
+    async getProjects(): Promise<Project[]> {
+      return await ipcRenderer.invoke('get-projects');
+    },
+
+    /**
+     * 新しいプロジェクトを追加します。
+     * @param name プロジェクト名
+     * @param path プロジェクトのパス
+     * @returns 追加されたプロジェクト
+     */
+    async addProject(name: string, path: string): Promise<Project> {
+      return await ipcRenderer.invoke('add-project', name, path);
+    },
+
+    /**
+     * プロジェクトを削除します。
+     * @param projectId 削除するプロジェクトのID
+     * @returns 削除成功時はtrue
+     */
+    async removeProject(projectId: string): Promise<boolean> {
+      return await ipcRenderer.invoke('remove-project', projectId);
+    },
+
+    /**
+     * プロジェクト名を更新します。
+     * @param projectId 更新するプロジェクトのID
+     * @param name 新しいプロジェクト名
+     * @returns 更新成功時はtrue
+     */
+    async updateProject(projectId: string, name: string): Promise<boolean> {
+      return await ipcRenderer.invoke('update-project', projectId, name);
+    },
+
+    /**
+     * 現在のプロジェクトを設定します。
+     * @param projectId 選択するプロジェクトのID
+     * @returns 設定成功時はtrue
+     */
+    async setCurrentProject(projectId: string): Promise<boolean> {
+      return await ipcRenderer.invoke('set-current-project', projectId);
+    },
+
+    /**
+     * 現在選択されているプロジェクトを取得します。
+     * @returns 現在のプロジェクト。未選択時はnull。
+     */
+    async getCurrentProject(): Promise<Project | null> {
+      return await ipcRenderer.invoke('get-current-project');
     },
   },
 

@@ -6,6 +6,8 @@ import { createMenu } from './menu';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/512x512.png?asset';
 import { pathToFileURL } from 'url';
+import { randomUUID } from 'crypto';
+import type { Project } from '../types/project';
 
 let Store: any;
 let settingStore;
@@ -162,6 +164,38 @@ async function setupStore() {
   }
 }
 
+/**
+ * 既存のprojectPathをprojects配列に移行する
+ */
+async function migrateToMultipleProjects(): Promise<void> {
+  const settingStore = await getSettingStore();
+  const projects = settingStore.get('projects', null);
+
+  // すでに移行済みの場合はスキップ
+  if (projects) {
+    return;
+  }
+
+  const oldProjectPath = settingStore.get('projectPath', null);
+
+  if (oldProjectPath) {
+    // 既存のプロジェクトパスを最初のプロジェクトとして設定
+    const defaultProject: Project = {
+      id: randomUUID(),
+      name: 'デフォルトプロジェクト',
+      path: oldProjectPath,
+    };
+
+    settingStore.set('projects', [defaultProject]);
+    settingStore.set('currentProjectId', defaultProject.id);
+    // 古い projectPath は削除しない（後方互換性のため残しておく）
+  } else {
+    // 初期状態
+    settingStore.set('projects', []);
+    settingStore.set('currentProjectId', null);
+  }
+}
+
 // ファイルを開く
 async function openFile(): Promise<null | {
   filePath: string;
@@ -244,11 +278,21 @@ ipcMain.handle('save-project-path', async (_event, folderPath) => {
 });
 
 /**
- * プロジェクトパスを取得する
+ * プロジェクトパスを取得する（現在選択されているプロジェクトのパス）
  */
 async function getProjectPath(): Promise<string | null> {
   const settingStore = await getSettingStore();
-  return settingStore.get('projectPath', null);
+  const currentProjectId = settingStore.get('currentProjectId', null);
+
+  if (!currentProjectId) {
+    // 後方互換性のため、古い形式もチェック
+    return settingStore.get('projectPath', null);
+  }
+
+  const projects: Project[] = settingStore.get('projects', []);
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  return currentProject?.path ?? null;
 }
 
 /**
@@ -510,6 +554,125 @@ ipcMain.on('editor-height-updated', (_event, height) => {
   }
 });
 
+// プロジェクト管理 IPC
+/**
+ * プロジェクト一覧を取得する
+ */
+ipcMain.handle('get-projects', async () => {
+  const settingStore = await getSettingStore();
+  const projects: Project[] = settingStore.get('projects', []);
+  return projects;
+});
+
+/**
+ * プロジェクトを追加する
+ */
+ipcMain.handle('add-project', async (_event, name: string, path: string) => {
+  const settingStore = await getSettingStore();
+  const projects: Project[] = settingStore.get('projects', []);
+
+  const newProject: Project = {
+    id: randomUUID(),
+    name,
+    path,
+  };
+
+  projects.push(newProject);
+  settingStore.set('projects', projects);
+
+  // 最初のプロジェクトの場合は自動的に選択
+  if (projects.length === 1) {
+    settingStore.set('currentProjectId', newProject.id);
+    // 後方互換性のため projectPath も更新
+    settingStore.set('projectPath', path);
+  }
+
+  return newProject;
+});
+
+/**
+ * プロジェクトを削除する
+ */
+ipcMain.handle('remove-project', async (_event, projectId: string) => {
+  const settingStore = await getSettingStore();
+  const projects: Project[] = settingStore.get('projects', []);
+  const currentProjectId = settingStore.get('currentProjectId', null);
+
+  const updatedProjects = projects.filter((p) => p.id !== projectId);
+  settingStore.set('projects', updatedProjects);
+
+  // 削除されたプロジェクトが現在選択中の場合
+  if (currentProjectId === projectId) {
+    if (updatedProjects.length > 0) {
+      // 最初のプロジェクトを選択
+      settingStore.set('currentProjectId', updatedProjects[0].id);
+      settingStore.set('projectPath', updatedProjects[0].path);
+    } else {
+      settingStore.set('currentProjectId', null);
+      settingStore.set('projectPath', null);
+    }
+  }
+
+  return true;
+});
+
+/**
+ * プロジェクト名を更新する
+ */
+ipcMain.handle(
+  'update-project',
+  async (_event, projectId: string, name: string) => {
+    const settingStore = await getSettingStore();
+    const projects: Project[] = settingStore.get('projects', []);
+
+    const updatedProjects = projects.map((p) =>
+      p.id === projectId ? { ...p, name } : p,
+    );
+
+    settingStore.set('projects', updatedProjects);
+    return true;
+  },
+);
+
+/**
+ * 現在のプロジェクトを設定する
+ */
+ipcMain.handle('set-current-project', async (_event, projectId: string) => {
+  const settingStore = await getSettingStore();
+  const projects: Project[] = settingStore.get('projects', []);
+  const project = projects.find((p) => p.id === projectId);
+
+  if (!project) {
+    return false;
+  }
+
+  settingStore.set('currentProjectId', projectId);
+  // 後方互換性のため projectPath も更新
+  settingStore.set('projectPath', project.path);
+
+  // scrapsStore をリセットして新しいプロジェクトのものを読み込む
+  scrapsStore = null;
+
+  return true;
+});
+
+/**
+ * 現在のプロジェクトを取得する
+ */
+ipcMain.handle('get-current-project', async () => {
+  const settingStore = await getSettingStore();
+  const currentProjectId = settingStore.get('currentProjectId', null);
+
+  if (!currentProjectId) {
+    return null;
+  }
+
+  const projects: Project[] = settingStore.get('projects', []);
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  return currentProject ?? null;
+});
+
 // ファイル操作 IPC
 ipcMain.handle('open-file', openFile);
 ipcMain.handle('save-file', saveFile);
@@ -519,6 +682,7 @@ ipcMain.handle('get-project-path', getProjectPath);
 async function main() {
   await app.whenReady();
   await setupStore();
+  await migrateToMultipleProjects();
 
   electronApp.setAppUserModelId('com.electron');
 

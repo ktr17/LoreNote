@@ -7,10 +7,13 @@ import Scrap from './components/Scrap';
 import Setting from './components/Setting';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
 import { useLocation } from 'react-router-dom';
+import type { Project } from '../../types/project';
 
 function App(): JSX.Element {
   const location = useLocation();
   const [showSetting, setShowSetting] = useState(location.hash === '#setting');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
   const {
     scraps,
@@ -30,6 +33,44 @@ function App(): JSX.Element {
   }, [location]);
 
   const navigate = useNavigate();
+
+  // プロジェクト一覧と現在のプロジェクトを読み込む
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const loadedProjects = await window.api.project.getProjects();
+        setProjects(loadedProjects);
+
+        const current = await window.api.project.getCurrentProject();
+        setCurrentProject(current);
+      } catch (error) {
+        console.error('プロジェクトの読み込みエラー:', error);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  // プロジェクト切り替えハンドラ
+  const handleProjectChange = async (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const projectId = event.target.value;
+    if (!projectId) return;
+
+    try {
+      await window.api.project.setCurrentProject(projectId);
+      const selectedProject = projects.find((p) => p.id === projectId);
+      if (selectedProject) {
+        setCurrentProject(selectedProject);
+        // ページをリロードして新しいプロジェクトのスクラップを読み込む
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('プロジェクト切り替えエラー:', error);
+      alert('プロジェクトの切り替えに失敗しました');
+    }
+  };
 
   useEffect(() => {
     // メインプロセスからの設定画面遷移指示を受信
@@ -110,6 +151,33 @@ function App(): JSX.Element {
     <div className="app-container">
       <header className="app-header">
         <h1 className="app-title">LoreNote</h1>
+        {projects.length > 0 && (
+          <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <label htmlFor="project-selector" style={{ fontSize: '14px', color: '#ccc' }}>
+              プロジェクト:
+            </label>
+            <select
+              id="project-selector"
+              value={currentProject?.id || ''}
+              onChange={handleProjectChange}
+              style={{
+                padding: '5px 10px',
+                backgroundColor: '#2b2b2b',
+                color: '#fff',
+                border: '1px solid #555',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <Button onClick={addScrap} variant="additionalMemo" size="addBtn">
           <svg
             xmlns="http://www.w3.org/2000/svg"
