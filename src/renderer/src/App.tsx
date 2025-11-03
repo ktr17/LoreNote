@@ -5,12 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 import Scrap from './components/Scrap';
 import Setting from './components/Setting';
+import HamburgerMenu from './components/HamburgerMenu';
+import Sidebar from './components/Sidebar';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
 import { useLocation } from 'react-router-dom';
+import type { Project } from '../../types/project';
 
 function App(): JSX.Element {
   const location = useLocation();
   const [showSetting, setShowSetting] = useState(location.hash === '#setting');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     scraps,
@@ -30,6 +36,41 @@ function App(): JSX.Element {
   }, [location]);
 
   const navigate = useNavigate();
+
+  // プロジェクト一覧と現在のプロジェクトを読み込む
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const loadedProjects = await window.api.project.getProjects();
+        setProjects(loadedProjects);
+
+        const current = await window.api.project.getCurrentProject();
+        setCurrentProject(current);
+      } catch (error) {
+        console.error('プロジェクトの読み込みエラー:', error);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  // プロジェクト切り替えハンドラ
+  const handleProjectChange = async (projectId: string) => {
+    if (!projectId) return;
+
+    try {
+      await window.api.project.setCurrentProject(projectId);
+      const selectedProject = projects.find((p) => p.id === projectId);
+      if (selectedProject) {
+        setCurrentProject(selectedProject);
+        // ページをリロードして新しいプロジェクトのスクラップを読み込む
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('プロジェクト切り替えエラー:', error);
+      alert('プロジェクトの切り替えに失敗しました');
+    }
+  };
 
   useEffect(() => {
     // メインプロセスからの設定画面遷移指示を受信
@@ -108,8 +149,23 @@ function App(): JSX.Element {
 
   return (
     <div className="app-container">
+      <Sidebar
+        isOpen={isSidebarOpen}
+        projects={projects}
+        currentProject={currentProject}
+        onProjectChange={handleProjectChange}
+        onClose={() => setIsSidebarOpen(false)}
+      />
       <header className="app-header">
-        <h1 className="app-title">LoreNote</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {!isSidebarOpen && (
+            <HamburgerMenu
+              onClick={() => setIsSidebarOpen(true)}
+              isOpen={false}
+            />
+          )}
+          <h1 className="app-title">LoreNote</h1>
+        </div>
         <Button onClick={addScrap} variant="additionalMemo" size="addBtn">
           <svg
             xmlns="http://www.w3.org/2000/svg"

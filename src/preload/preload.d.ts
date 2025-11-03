@@ -1,6 +1,7 @@
 // src/preload/preload.d.ts
 import { Scrap } from './../renderer/src/model/Scrap';
 import { ElectronAPI } from '@electron-toolkit/preload';
+import type { Project } from '../types/project';
 
 declare global {
   interface Window {
@@ -36,6 +37,12 @@ declare global {
         offEditorHeightUpdated(callback: (height: number) => void): void;
         onHeightUpdated(callback: (height: number) => void): void;
         offHeightUpdated(callback: (height: number) => void): void;
+        getProjects(): Promise<Project[]>;
+        addProject(name: string, path: string): Promise<Project>;
+        removeProject(projectId: string): Promise<boolean>;
+        updateProject(projectId: string, name: string): Promise<boolean>;
+        setCurrentProject(projectId: string): Promise<boolean>;
+        getCurrentProject(): Promise<Project | null>;
       };
       navigation: {
         onNavigateToSetting(callback: () => void): void;
