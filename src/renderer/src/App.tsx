@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 import Scrap from './components/Scrap';
 import Setting from './components/Setting';
+import HamburgerMenu from './components/HamburgerMenu';
+import Sidebar from './components/Sidebar';
 import useScrapViewModel from './viewmodel/ScrapViewModel';
 import { useLocation } from 'react-router-dom';
 import type { Project } from '../../types/project';
@@ -14,6 +16,7 @@ function App(): JSX.Element {
   const [showSetting, setShowSetting] = useState(location.hash === '#setting');
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     scraps,
@@ -52,10 +55,7 @@ function App(): JSX.Element {
   }, []);
 
   // プロジェクト切り替えハンドラ
-  const handleProjectChange = async (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    const projectId = event.target.value;
+  const handleProjectChange = async (projectId: string) => {
     if (!projectId) return;
 
     try {
@@ -149,35 +149,23 @@ function App(): JSX.Element {
 
   return (
     <div className="app-container">
+      <Sidebar
+        isOpen={isSidebarOpen}
+        projects={projects}
+        currentProject={currentProject}
+        onProjectChange={handleProjectChange}
+        onClose={() => setIsSidebarOpen(false)}
+      />
       <header className="app-header">
-        <h1 className="app-title">LoreNote</h1>
-        {projects.length > 0 && (
-          <div style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <label htmlFor="project-selector" style={{ fontSize: '14px', color: '#ccc' }}>
-              プロジェクト:
-            </label>
-            <select
-              id="project-selector"
-              value={currentProject?.id || ''}
-              onChange={handleProjectChange}
-              style={{
-                padding: '5px 10px',
-                backgroundColor: '#2b2b2b',
-                color: '#fff',
-                border: '1px solid #555',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '14px',
-              }}
-            >
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {!isSidebarOpen && (
+            <HamburgerMenu
+              onClick={() => setIsSidebarOpen(true)}
+              isOpen={false}
+            />
+          )}
+          <h1 className="app-title">LoreNote</h1>
+        </div>
         <Button onClick={addScrap} variant="additionalMemo" size="addBtn">
           <svg
             xmlns="http://www.w3.org/2000/svg"
