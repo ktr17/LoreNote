@@ -678,6 +678,74 @@ ipcMain.handle('open-file', openFile);
 ipcMain.handle('save-file', saveFile);
 ipcMain.handle('get-project-path', getProjectPath);
 
+// 画像操作 IPC
+/**
+ * 画像ファイルを保存する
+ * @param buffer 画像データ (Buffer or Uint8Array)
+ * @param filename ファイル名
+ * @returns 保存された画像のプロジェクトルートからの相対パス
+ */
+ipcMain.handle(
+  'save-image',
+  async (_event, buffer: Uint8Array, filename: string) => {
+    try {
+      const projectPath = await getProjectPath();
+      if (!projectPath) {
+        throw new Error('プロジェクトパスが設定されていません');
+      }
+
+      // imgフォルダのパスを作成
+      const imgFolderPath = path.join(projectPath, 'img');
+
+      // imgフォルダが存在しない場合は作成
+      if (!fs.existsSync(imgFolderPath)) {
+        fs.mkdirSync(imgFolderPath, { recursive: true });
+      }
+
+      // ファイル名の重複を避けるためにタイムスタンプを追加
+      const timestamp = Date.now();
+      const ext = path.extname(filename);
+      const basename = path.basename(filename, ext);
+      const uniqueFilename = `${basename}_${timestamp}${ext}`;
+
+      // 画像を保存
+      const imagePath = path.join(imgFolderPath, uniqueFilename);
+      fs.writeFileSync(imagePath, Buffer.from(buffer));
+
+      // プロジェクトルートからの相対パスを返す
+      return `/img/${uniqueFilename}`;
+    } catch (error) {
+      console.error('画像保存エラー:', error);
+      throw error;
+    }
+  },
+);
+
+/**
+ * 画像ファイルのパスを解決する（プロジェクト相対パスから絶対パスへ）
+ * @param relativePath プロジェクトルートからの相対パス (例: /img/image.png)
+ * @returns 絶対パス
+ */
+ipcMain.handle('resolve-image-path', async (_event, relativePath: string) => {
+  try {
+    const projectPath = await getProjectPath();
+    if (!projectPath) {
+      throw new Error('プロジェクトパスが設定されていません');
+    }
+
+    // 先頭のスラッシュを削除して結合
+    const cleanPath = relativePath.startsWith('/')
+      ? relativePath.slice(1)
+      : relativePath;
+    const absolutePath = path.join(projectPath, cleanPath);
+
+    return absolutePath;
+  } catch (error) {
+    console.error('画像パス解決エラー:', error);
+    throw error;
+  }
+});
+
 // アプリ初期化
 async function main() {
   await app.whenReady();
