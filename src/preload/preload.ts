@@ -298,6 +298,27 @@ const api = {
       return await ipcRenderer.invoke('open-dialog-folder');
     },
   },
+
+  image: {
+    /**
+     * 画像ファイルを保存します。
+     * @param buffer 画像データ (Uint8Array)
+     * @param filename ファイル名
+     * @returns プロジェクトルートからの相対パス (例: /img/image.png)
+     */
+    async save(buffer: Uint8Array, filename: string): Promise<string> {
+      return await ipcRenderer.invoke('save-image', buffer, filename);
+    },
+
+    /**
+     * プロジェクト相対パスから絶対パスを取得します。
+     * @param relativePath プロジェクトルートからの相対パス (例: /img/image.png)
+     * @returns 絶対パス
+     */
+    async resolvePath(relativePath: string): Promise<string> {
+      return await ipcRenderer.invoke('resolve-image-path', relativePath);
+    },
+  },
 };
 
 // グローバルな `api` 名前空間として、各種機能をレンダラープロセスに公開

@@ -52,6 +52,10 @@ declare global {
         openFile(): Promise<{ filePath: string; canceled: boolean }>;
         openFolder(): Promise<{ folderPath: string; canceled: boolean }>;
       };
+      image: {
+        save(buffer: Uint8Array, filename: string): Promise<string>;
+        resolvePath(relativePath: string): Promise<string>;
+      };
     };
   }
 }

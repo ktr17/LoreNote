@@ -19,6 +19,7 @@ export const MarkdownEditor = ({
   const simpleMdeRef = useRef<any>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const cmRef = useRef<CodeMirror.Editor | null>(null);
+  const eventHandlersRegistered = useRef(false);
 
   console.log('📏 Current editorHeight:', editorHeight);
 
@@ -33,6 +34,7 @@ export const MarkdownEditor = ({
       placeholder: placeholder,
       status: false,
       toolbar: false,
+      previewImagesInEditor: true,
     } as Options;
   }, [placeholder]);
 
@@ -121,7 +123,112 @@ export const MarkdownEditor = ({
     }
   }, [editorHeight, isEditorReady, updateEditorHeight]);
 
-  // getCodemirrorInstance でもバックアップとして設定
+  // プレビュー内の画像パスを絶対パスに変換する
+  useEffect(() => {
+    if (!cmRef.current) return;
+
+    const convertImagePaths = async () => {
+      const wrapper = cmRef.current?.getWrapperElement();
+      if (!wrapper) return;
+
+      const previewElement = wrapper.querySelector('.editor-preview-side, .editor-preview');
+      if (!previewElement) return;
+
+      const images = previewElement.querySelectorAll('img');
+      for (const img of images) {
+        const src = img.getAttribute('src');
+        if (src && (src.startsWith('/img/') || src.startsWith('img/'))) {
+          try {
+            const absolutePath = await window.api.image.resolvePath(src);
+            img.src = absolutePath;
+          } catch (error) {
+            console.error('画像パス解決エラー:', error);
+          }
+        }
+      }
+    };
+
+    // MutationObserverでプレビューの変更を監視
+    const observer = new MutationObserver(() => {
+      convertImagePaths();
+    });
+
+    const wrapper = cmRef.current.getWrapperElement();
+    if (wrapper) {
+      observer.observe(wrapper, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isEditorReady]);
+
+  // 画像をアップロードする関数
+  const handleImageUpload = useCallback(
+    async (file: File): Promise<void> => {
+      try {
+        // ファイルをUint8Arrayに変換
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        // 画像を保存
+        const relativePath = await window.api.image.save(uint8Array, file.name);
+
+        // Markdownリンクを生成
+        const markdownLink = `![${file.name}](${relativePath})`;
+
+        // エディタのカーソル位置に挿入
+        if (cmRef.current) {
+          const doc = cmRef.current.getDoc();
+          const cursor = doc.getCursor();
+          doc.replaceRange(markdownLink, cursor);
+
+          // カーソルを挿入後の位置に移動
+          const newCursor = {
+            line: cursor.line,
+            ch: cursor.ch + markdownLink.length,
+          };
+          doc.setCursor(newCursor);
+
+          // エディタの内容を更新
+          onChange(cmRef.current.getValue());
+        }
+      } catch (error) {
+        console.error('画像アップロードエラー:', error);
+        alert('画像のアップロードに失敗しました');
+      }
+    },
+    [onChange],
+  );
+
+  // クリップボードから画像を貼り付ける処理
+  const handlePaste = useCallback(
+    async (e: ClipboardEvent): Promise<void> => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            // ファイル名を生成（拡張子を取得）
+            const ext = item.type.split('/')[1];
+            const filename = `pasted-image-${Date.now()}.${ext}`;
+            const renamedFile = new File([file], filename, { type: file.type });
+            await handleImageUpload(renamedFile);
+          }
+          break;
+        }
+      }
+    },
+    [handleImageUpload],
+  );
+
   const getCmInstance = useCallback(
     (cm: CodeMirror.Editor) => {
       console.log('🔧 getCmInstance called');
@@ -130,14 +237,37 @@ export const MarkdownEditor = ({
 
       cmRef.current = cm;
 
-      // CodeMirrorインスタンス取得時に内部dropイベントを無効化
-      cm.on('drop', (_, e: Event) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-      cm.on('dragover', (_, e: Event) => {
-        e.preventDefault();
-      });
+      // イベントハンドラの重複登録を防ぐ
+      if (!eventHandlersRegistered.current) {
+        eventHandlersRegistered.current = true;
+
+        // CodeMirrorインスタンス取得時に内部dropイベントを無効化してカスタムハンドラを設定
+        cm.on('drop', async (_, e: DragEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // ドロップされたファイルを処理
+          const files = e.dataTransfer?.files;
+          if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              // 画像ファイルのみ処理
+              if (file.type.startsWith('image/')) {
+                await handleImageUpload(file);
+              }
+            }
+          }
+        });
+
+        cm.on('dragover', (_, e: Event) => {
+          e.preventDefault();
+        });
+
+        // ペーストイベントを設定
+        cm.on('paste', (_, e: ClipboardEvent) => {
+          handlePaste(e);
+        });
+      }
 
       if (cm) {
         // 直接CodeMirrorインスタンスでも試す
@@ -148,7 +278,7 @@ export const MarkdownEditor = ({
         }, 10);
       }
     },
-    [editorHeight],
+    [editorHeight, handleImageUpload, handlePaste],
   );
 
   return (
