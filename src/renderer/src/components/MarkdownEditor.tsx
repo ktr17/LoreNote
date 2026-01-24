@@ -19,6 +19,7 @@ export const MarkdownEditor = ({
   const simpleMdeRef = useRef<any>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const cmRef = useRef<CodeMirror.Editor | null>(null);
+  const eventHandlersRegistered = useRef(false);
 
   console.log('📏 Current editorHeight:', editorHeight);
 
@@ -33,6 +34,7 @@ export const MarkdownEditor = ({
       placeholder: placeholder,
       status: false,
       toolbar: false,
+      previewImagesInEditor: true,
     } as Options;
   }, [placeholder]);
 
@@ -121,7 +123,49 @@ export const MarkdownEditor = ({
     }
   }, [editorHeight, isEditorReady, updateEditorHeight]);
 
-  // getCodemirrorInstance でもバックアップとして設定
+  // プレビュー内の画像パスを絶対パスに変換する
+  useEffect(() => {
+    if (!cmRef.current) return;
+
+    const convertImagePaths = async () => {
+      const wrapper = cmRef.current?.getWrapperElement();
+      if (!wrapper) return;
+
+      const previewElement = wrapper.querySelector('.editor-preview-side, .editor-preview');
+      if (!previewElement) return;
+
+      const images = previewElement.querySelectorAll('img');
+      for (const img of images) {
+        const src = img.getAttribute('src');
+        if (src && (src.startsWith('/img/') || src.startsWith('img/'))) {
+          try {
+            const absolutePath = await window.api.image.resolvePath(src);
+            img.src = absolutePath;
+          } catch (error) {
+            console.error('画像パス解決エラー:', error);
+          }
+        }
+      }
+    };
+
+    // MutationObserverでプレビューの変更を監視
+    const observer = new MutationObserver(() => {
+      convertImagePaths();
+    });
+
+    const wrapper = cmRef.current.getWrapperElement();
+    if (wrapper) {
+      observer.observe(wrapper, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isEditorReady]);
+
   // 画像をアップロードする関数
   const handleImageUpload = useCallback(
     async (file: File): Promise<void> => {
@@ -193,32 +237,37 @@ export const MarkdownEditor = ({
 
       cmRef.current = cm;
 
-      // CodeMirrorインスタンス取得時に内部dropイベントを無効化してカスタムハンドラを設定
-      cm.on('drop', async (_, e: DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+      // イベントハンドラの重複登録を防ぐ
+      if (!eventHandlersRegistered.current) {
+        eventHandlersRegistered.current = true;
 
-        // ドロップされたファイルを処理
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            // 画像ファイルのみ処理
-            if (file.type.startsWith('image/')) {
-              await handleImageUpload(file);
+        // CodeMirrorインスタンス取得時に内部dropイベントを無効化してカスタムハンドラを設定
+        cm.on('drop', async (_, e: DragEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // ドロップされたファイルを処理
+          const files = e.dataTransfer?.files;
+          if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              // 画像ファイルのみ処理
+              if (file.type.startsWith('image/')) {
+                await handleImageUpload(file);
+              }
             }
           }
-        }
-      });
+        });
 
-      cm.on('dragover', (_, e: Event) => {
-        e.preventDefault();
-      });
+        cm.on('dragover', (_, e: Event) => {
+          e.preventDefault();
+        });
 
-      // ペーストイベントを設定
-      cm.on('paste', (_, e: ClipboardEvent) => {
-        handlePaste(e);
-      });
+        // ペーストイベントを設定
+        cm.on('paste', (_, e: ClipboardEvent) => {
+          handlePaste(e);
+        });
+      }
 
       if (cm) {
         // 直接CodeMirrorインスタンスでも試す
